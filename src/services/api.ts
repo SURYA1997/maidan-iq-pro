@@ -1,0 +1,213 @@
+const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? "http://localhost:8000";
+
+/* ─── Helpers ───────────────────────────────────────────────────────────── */
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText} — ${path}`);
+  return res.json() as Promise<T>;
+}
+
+function qs(params: Record<string, string | undefined>): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") p.append(k, v);
+  }
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
+/* ─── Response types (from live API sampling) ───────────────────────────── */
+
+export interface VenueSummary {
+  name: string;
+  city: string;
+  total_matches: number;
+  avg_first_innings_score: number;
+  chase_win_pct: number;
+}
+
+export interface VenueDetail extends VenueSummary {
+  avg_second_innings_score: number;
+  highest_score: number;
+  lowest_score: number;
+  avg_powerplay_score: number;
+}
+
+export interface TeamSummary {
+  team_name: string;
+  total_matches: number;
+  total_wins: number;
+  win_pct: number;
+  seasons_played: number;
+}
+
+export interface TeamStrength {
+  team_name: string;
+  overall_win_pct: number;
+  chase_win_pct: number;
+  defend_win_pct: number;
+  avg_first_innings_score: number;
+  avg_powerplay_runs_batting: number;
+  avg_death_economy_bowling: number;
+}
+
+export interface PlayerSummary {
+  registry_id: string;
+  name: string;
+}
+
+export interface PlayerDetail {
+  registry_id: string;
+  name: string;
+  batting: {
+    total_runs: number;
+    total_balls: number;
+    strike_rate: number;
+    boundary_fours: number;
+    boundary_sixes: number;
+    boundary_pct: number;
+    avg_runs_per_innings: number;
+    powerplay_sr: number;
+    death_sr: number;
+    pressure_sr: number;
+  };
+  bowling: {
+    total_wickets: number;
+    total_balls_bowled: number;
+    economy: number | null;
+    powerplay_economy: number | null;
+    death_economy: number | null;
+    dot_ball_pct: number | null;
+  };
+}
+
+export interface PlayerMatchup {
+  balls_faced: number;
+  runs: number;
+  strike_rate: number;
+  dismissals: number;
+  dismissal_pct: number;
+  boundary_pct: number;
+}
+
+export interface MatchSummary {
+  id: string;
+  date: string;
+  team1: string;
+  team2: string;
+  venue: string;
+  city: string;
+  season: string;
+  winner: string;
+}
+
+export interface OverEntry {
+  over_number: number;
+  runs_that_over: number;
+  wickets_that_over: number;
+  cumulative_score: number;
+  cumulative_wickets: number;
+  key_batter: string;
+  key_bowler: string;
+}
+
+export interface Partnership {
+  innings_number: number;
+  batter1: string;
+  batter2: string;
+  runs: number;
+  balls: number;
+  wicket_fell: boolean;
+}
+
+export interface Wicket {
+  innings_number: number;
+  over_number: number;
+  ball_number: number;
+  wicket_player_out: string;
+  wicket_kind: string;
+  score_at_fall: number;
+}
+
+export interface MatchStory {
+  match_id: string;
+  innings_timeline: Record<string, OverEntry[]>;
+  partnerships: Partnership[];
+  wickets: Wicket[];
+}
+
+export interface TeamMatchup {
+  total_balls: number;
+  total_runs: number;
+  strike_rate: number;
+  dismissals: number;
+  dismissal_pct: number;
+  boundary_pct: number;
+  dot_pct: number;
+}
+
+/* ─── API functions ─────────────────────────────────────────────────────── */
+
+// Venues
+export const getVenues = () => get<VenueSummary[]>("/venues");
+export const getVenue = (venueName: string) =>
+  get<VenueDetail>(`/venues/${encodeURIComponent(venueName)}`);
+
+// Teams
+export const getTeams = () => get<TeamSummary[]>("/teams");
+export const getTeamStrength = (teamName: string) =>
+  get<TeamStrength>(`/teams/${encodeURIComponent(teamName)}/strength`);
+
+// Players
+export const getPlayers = (search?: string) =>
+  get<PlayerSummary[]>(`/players${qs({ search })}`);
+export const getPlayer = (registryId: string) =>
+  get<PlayerDetail>(`/players/${registryId}`);
+export const getPlayerMatchup = (
+  registryId: string,
+  phase?: string,
+  venue?: string,
+) => get<PlayerMatchup>(`/players/${registryId}/matchup${qs({ phase, venue })}`);
+
+// Matches
+export const getMatches = (season?: string, team?: string) =>
+  get<MatchSummary[]>(`/matches${qs({ season, team })}`);
+export const getMatch = (matchId: string) =>
+  get<MatchSummary>(`/matches/${matchId}`);
+export const getMatchStory = (matchId: string) =>
+  get<MatchStory>(`/matches/${matchId}/story`);
+
+// Matchup oracle (batter in context)
+export const getMatchup = (
+  batterId?: string,
+  phase?: string,
+  venue?: string,
+) =>
+  get<TeamMatchup>(
+    `/teams/matchup${qs({ batter_id: batterId, phase, venue })}`,
+  );
+
+/* ─── Commentary / Degen Agent ──────────────────────────────────────────── */
+
+export interface CommentaryEntry {
+  timestamp: string;
+  commentary: string;
+  type: "ball" | "over" | "milestone" | "demo";
+  generated_at?: number;
+  match?: string;
+}
+
+export interface DemoCommentary {
+  entries: CommentaryEntry[];
+  source: string;
+}
+
+export const getLiveCommentary = (matchId: string) =>
+  get<CommentaryEntry>(`/commentary/live/${matchId}`);
+
+export const getCommentaryHistory = (matchId: string) =>
+  get<CommentaryEntry[]>(`/commentary/history/${matchId}`);
+
+export const getDemoCommentary = () =>
+  get<DemoCommentary>("/commentary/demo");
