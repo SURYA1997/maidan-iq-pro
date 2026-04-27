@@ -347,6 +347,88 @@ export const getMatchFielding = (matchId: string) =>
 export const getMatchImpact = (matchId: string) =>
   get<MatchImpact>(`/matches/${matchId}/impact`);
 
+/* ─── Batting ───────────────────────────────────────────────────────────── */
+
+export interface BallEntry {
+  over: number;
+  ball: number;
+  runs: number;
+  extras: number;
+  is_wicket: boolean;
+}
+
+export interface BatPhase {
+  runs: number;
+  balls: number;
+  strike_rate: number;
+}
+
+export interface BatsmanDismissal {
+  how_out: string;
+  dismissed_by: string;
+  fielder?: string | null;
+}
+
+export interface BatsmanEntry {
+  name: string;
+  batting_position: number;
+  impact_score: number;
+  stats: {
+    runs: number;
+    balls: number;
+    strike_rate: number;
+    fours: number;
+    sixes: number;
+    dot_balls: number;
+    dot_ball_pct: number;
+  };
+  phase_breakdown: {
+    powerplay: BatPhase;
+    middle: BatPhase;
+    death: BatPhase;
+  };
+  dismissal: BatsmanDismissal | null;
+  ball_by_ball: BallEntry[];
+}
+
+export interface BattingInnings {
+  team: string;
+  batsmen: BatsmanEntry[];
+}
+
+export interface MatchBatting {
+  match_id: string;
+  innings_1: BattingInnings;
+  innings_2: BattingInnings;
+}
+
+export const getMatchBatting = (matchId: string) =>
+  get<MatchBatting>(`/matches/${matchId}/batting`);
+
+/* ─── Points table ──────────────────────────────────────────────────────── */
+
+export interface PointsTableEntry {
+  team: string;
+  full_name: string;
+  matches_played: number;
+  wins: number;
+  losses: number;
+  no_result: number;
+  points: number;
+  nrr: number;
+  form: string[];
+  position: number;
+}
+
+export interface PointsTableResponse {
+  season: number;
+  updated_at: string;
+  table: PointsTableEntry[];
+}
+
+export const getPointsTable = () =>
+  get<PointsTableResponse>("/points-table");
+
 /* ─── Live match ─────────────────────────────────────────────────────────── */
 
 export interface LiveMatchResponse extends MatchSummary {

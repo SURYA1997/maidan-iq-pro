@@ -5,8 +5,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import {
   getLiveCurrentMatch,
   getMatches,
+  getPointsTable,
   type LiveMatchResponse,
   type MatchSummary,
+  type PointsTableEntry,
 } from "@/services/api";
 
 export const Route = createFileRoute("/matches")({
@@ -323,16 +325,115 @@ function AllMatchesSection({ matches }: { matches: MatchSummary[] }) {
   );
 }
 
-/* ─── Section 4: Points Table placeholder ───────────────────────────────── */
+/* ─── Section 4: Points Table ───────────────────────────────────────────── */
+
+function nrrColor(nrr: number): string {
+  if (nrr > 0.1) return "#4CAF50";
+  if (nrr < -0.1) return "#EF5350";
+  return "#F0F0F0";
+}
+
+function FormPill({ result }: { result: string }) {
+  const isWin = result === "W";
+  return (
+    <span
+      className="inline-flex h-5 w-5 items-center justify-center font-mono text-[9px] font-bold"
+      style={{
+        background: isWin ? "var(--accent-primary)" : "#1E1E2E",
+        color: isWin ? "#000" : "#6B7280",
+      }}
+    >
+      {result}
+    </span>
+  );
+}
 
 function PointsTableSection() {
+  const [table, setTable] = useState<PointsTableEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState("");
+
+  useEffect(() => {
+    getPointsTable()
+      .then((res) => {
+        setTable(res.table);
+        setUpdatedAt(res.updated_at.slice(0, 10));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section className="mb-8">
-      <SectionHeader title="IPL 2026" subtitle="STANDINGS · COMING SOON" />
+      <SectionHeader title="IPL 2026" subtitle="STANDINGS" />
+
       <Card>
-        <div className="px-4 py-8 text-center font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
-          POINTS TABLE — INTELLIGENCE LOADING
+        {/* Header row */}
+        <div
+          className="grid gap-2 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.1em]"
+          style={{
+            gridTemplateColumns: "28px 1fr 32px 28px 28px 36px 72px 64px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            color: "#6B7280",
+          }}
+        >
+          <span>#</span>
+          <span>TEAM</span>
+          <span className="text-right">M</span>
+          <span className="text-right">W</span>
+          <span className="text-right">L</span>
+          <span className="text-right">PTS</span>
+          <span className="text-right">NRR</span>
+          <span className="text-right">FORM</span>
         </div>
+
+        {loading ? (
+          <div className="space-y-px">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="h-10 animate-pulse" style={{ background: "rgba(255,255,255,0.02)" }} />
+            ))}
+          </div>
+        ) : (
+          table.map((row) => {
+            const isPlayoff = row.position <= 4;
+            return (
+              <div
+                key={row.team}
+                className="grid items-center gap-2 px-3 py-2.5 hover:bg-white/[0.02]"
+                style={{
+                  gridTemplateColumns: "28px 1fr 32px 28px 28px 36px 72px 64px",
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  borderLeft: isPlayoff ? "2px solid var(--accent-primary)" : "2px solid transparent",
+                }}
+              >
+                <span className="font-mono text-[11px]" style={{ color: "#6B7280" }}>
+                  {row.position}
+                </span>
+                <span className="font-mono text-[12px] font-bold truncate" style={{ color: accent(row.full_name) }}>
+                  {row.team}
+                </span>
+                <span className="text-right font-mono text-[12px]" style={{ color: "#9CA3AF" }}>{row.matches_played}</span>
+                <span className="text-right font-mono text-[12px]" style={{ color: "#9CA3AF" }}>{row.wins}</span>
+                <span className="text-right font-mono text-[12px]" style={{ color: "#9CA3AF" }}>{row.losses}</span>
+                <span className="text-right font-mono text-[13px] font-black" style={{ color: "#F0F0F0" }}>{row.points}</span>
+                <span className="text-right font-mono text-[11px] font-bold tabular-nums" style={{ color: nrrColor(row.nrr) }}>
+                  {row.nrr >= 0 ? "+" : ""}{row.nrr.toFixed(3)}
+                </span>
+                <div className="flex justify-end gap-0.5">
+                  {row.form.slice(-5).map((r, i) => (
+                    <FormPill key={i} result={r} />
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {!loading && updatedAt && (
+          <div className="px-3 py-2 font-mono text-[9px]" style={{ color: "#6B7280", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            Updated from match results · {updatedAt}
+          </div>
+        )}
       </Card>
     </section>
   );
