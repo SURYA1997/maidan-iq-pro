@@ -1,5 +1,5 @@
 {
-  "name": "tanstack-start-app",
+  "name": "maidan-iq-pro",
   "main": "dist/server/index.js",
   "assets": {
     "directory": "dist/client"
