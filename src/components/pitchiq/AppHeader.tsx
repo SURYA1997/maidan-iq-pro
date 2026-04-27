@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Radio,
+  Calendar,
   BookOpen,
   Users,
   Crosshair,
   MapPin,
   Zap,
+  HelpCircle,
 } from "lucide-react";
 
 interface AppHeaderProps {
@@ -16,11 +18,13 @@ interface AppHeaderProps {
 
 const NAV_ITEMS = [
   { label: "LIVE",    to: "/live",    icon: Radio },
+  { label: "MATCHES", to: "/matches", icon: Calendar },
   { label: "STORY",   to: "/story",   icon: BookOpen },
   { label: "SQUADS",  to: "/squads",  icon: Users },
   { label: "MATCHUP", to: "/matchup", icon: Crosshair },
   { label: "VENUES",  to: "/venues",  icon: MapPin },
   { label: "FANTASY", to: "/fantasy", icon: Zap },
+  { label: "GUIDE",   to: "/guide",   icon: HelpCircle },
 ] as const;
 
 export function AppHeader({
@@ -44,7 +48,7 @@ export function AppHeader({
         borderBottom: "1px solid var(--border)",
       }}
     >
-      {/* Left — logo (always visible) */}
+      {/* Left — logo */}
       <Link
         to="/live"
         className="shrink-0 font-mono text-[13px] font-bold tracking-[0.25em]"
@@ -54,20 +58,21 @@ export function AppHeader({
         MIQ
       </Link>
 
-      {/* Center — nav links (hidden on mobile, shown md+) */}
+      {/* Center — nav links (hidden on mobile) */}
       <nav
-        className="hidden md:flex items-center gap-0"
+        className="hidden lg:flex items-center gap-0 overflow-x-auto"
         aria-label="Main navigation"
       >
-        {NAV_ITEMS.map(({ label, to }) => {
+        {NAV_ITEMS.map(({ label, to, icon: Icon }) => {
           const isActive =
             currentPath === to ||
             (to === "/live" && currentPath === "/terminal");
+          const isGuide = label === "GUIDE";
           return (
             <Link
               key={to}
               to={to}
-              className="relative flex h-12 items-center px-4 font-mono text-[13px] font-medium uppercase tracking-[0.08em] transition-colors"
+              className="relative flex h-12 items-center gap-1.5 px-3 font-mono text-[12px] font-medium uppercase tracking-[0.08em] transition-colors whitespace-nowrap"
               style={{
                 color: isActive ? "#FF6B00" : "#9CA3AF",
                 borderBottom: isActive
@@ -76,6 +81,13 @@ export function AppHeader({
               }}
               aria-current={isActive ? "page" : undefined}
             >
+              {isGuide && (
+                <Icon
+                  className="h-3.5 w-3.5 shrink-0"
+                  strokeWidth={isActive ? 2 : 1.5}
+                  style={{ color: isActive ? "#FF6B00" : "#9CA3AF" }}
+                />
+              )}
               {label}
             </Link>
           );

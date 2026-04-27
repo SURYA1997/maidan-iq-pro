@@ -15,8 +15,10 @@ import { Route as StoryRouteImport } from './routes/story'
 import { Route as SquadsRouteImport } from './routes/squads'
 import { Route as SeasonPassRouteImport } from './routes/season-pass'
 import { Route as MatchupRouteImport } from './routes/matchup'
+import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as FantasyRouteImport } from './routes/fantasy'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -50,6 +52,11 @@ const MatchupRoute = MatchupRouteImport.update({
   path: '/matchup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchesRoute = MatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -58,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
 const LiveRoute = LiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FantasyRoute = FantasyRouteImport.update({
@@ -74,8 +86,10 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/matchup': typeof MatchupRoute
   '/season-pass': typeof SeasonPassRoute
   '/squads': typeof SquadsRoute
@@ -86,8 +100,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/matchup': typeof MatchupRoute
   '/season-pass': typeof SeasonPassRoute
   '/squads': typeof SquadsRoute
@@ -99,8 +115,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/matches': typeof MatchesRoute
   '/matchup': typeof MatchupRoute
   '/season-pass': typeof SeasonPassRoute
   '/squads': typeof SquadsRoute
@@ -113,8 +131,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/fantasy'
+    | '/guide'
     | '/live'
     | '/login'
+    | '/matches'
     | '/matchup'
     | '/season-pass'
     | '/squads'
@@ -125,8 +145,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/fantasy'
+    | '/guide'
     | '/live'
     | '/login'
+    | '/matches'
     | '/matchup'
     | '/season-pass'
     | '/squads'
@@ -137,8 +159,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/fantasy'
+    | '/guide'
     | '/live'
     | '/login'
+    | '/matches'
     | '/matchup'
     | '/season-pass'
     | '/squads'
@@ -150,8 +174,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FantasyRoute: typeof FantasyRoute
+  GuideRoute: typeof GuideRoute
   LiveRoute: typeof LiveRoute
   LoginRoute: typeof LoginRoute
+  MatchesRoute: typeof MatchesRoute
   MatchupRoute: typeof MatchupRoute
   SeasonPassRoute: typeof SeasonPassRoute
   SquadsRoute: typeof SquadsRoute
@@ -204,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/matches': {
+      id: '/matches'
+      path: '/matches'
+      fullPath: '/matches'
+      preLoaderRoute: typeof MatchesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -216,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/live'
       preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fantasy': {
@@ -238,8 +278,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FantasyRoute: FantasyRoute,
+  GuideRoute: GuideRoute,
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
+  MatchesRoute: MatchesRoute,
   MatchupRoute: MatchupRoute,
   SeasonPassRoute: SeasonPassRoute,
   SquadsRoute: SquadsRoute,

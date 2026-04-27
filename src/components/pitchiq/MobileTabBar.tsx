@@ -1,20 +1,24 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Radio,
+  Calendar,
   BookOpen,
   Users,
   Crosshair,
   MapPin,
   Zap,
+  HelpCircle,
 } from "lucide-react";
 
 const tabs = [
-  { label: "LIVE", icon: Radio, to: "/live" },
-  { label: "STORY", icon: BookOpen, to: "/story" },
-  { label: "SQUADS", icon: Users, to: "/squads" },
-  { label: "MATCHUP", icon: Crosshair, to: "/matchup" },
-  { label: "VENUES", icon: MapPin, to: "/venues" },
-  { label: "FANTASY", icon: Zap, to: "/fantasy" },
+  { label: "LIVE",    icon: Radio,        to: "/live" },
+  { label: "MATCHES", icon: Calendar,     to: "/matches" },
+  { label: "STORY",   icon: BookOpen,     to: "/story" },
+  { label: "SQUADS",  icon: Users,        to: "/squads" },
+  { label: "MATCHUP", icon: Crosshair,    to: "/matchup" },
+  { label: "VENUES",  icon: MapPin,       to: "/venues" },
+  { label: "FANTASY", icon: Zap,          to: "/fantasy" },
+  { label: "GUIDE",   icon: HelpCircle,   to: "/guide" },
 ] as const;
 
 export function MobileTabBar({ isMatchLive = true }: { isMatchLive?: boolean }) {
@@ -23,7 +27,7 @@ export function MobileTabBar({ isMatchLive = true }: { isMatchLive?: boolean }) 
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 overflow-x-auto lg:hidden"
       style={{
         background: "var(--bg)",
         borderTop: "1px solid var(--border)",
@@ -36,11 +40,10 @@ export function MobileTabBar({ isMatchLive = true }: { isMatchLive?: boolean }) 
           <Link
             key={to}
             to={to}
-            className="relative flex flex-1 flex-col items-center justify-center gap-1 pb-1"
+            className="relative flex flex-1 min-w-[56px] flex-col items-center justify-center gap-1 pb-1"
             style={{ color: isActive ? "var(--accent-primary)" : "var(--text-muted)" }}
             aria-current={isActive ? "page" : undefined}
           >
-            {/* Active underline */}
             {isActive && (
               <span
                 className="absolute top-0 left-0 right-0 h-0.5"
@@ -49,7 +52,6 @@ export function MobileTabBar({ isMatchLive = true }: { isMatchLive?: boolean }) 
             )}
             <div className="relative">
               <Icon className="h-4 w-4" strokeWidth={isActive ? 2 : 1.5} />
-              {/* Live dot on LIVE tab */}
               {label === "LIVE" && isMatchLive && (
                 <span
                   className="live-dot absolute -right-1 -top-1"
@@ -58,9 +60,7 @@ export function MobileTabBar({ isMatchLive = true }: { isMatchLive?: boolean }) 
                 />
               )}
             </div>
-            <span
-              className="font-mono text-[8px] uppercase tracking-[0.1em]"
-            >
+            <span className="font-mono text-[7px] uppercase tracking-[0.08em]">
               {label}
             </span>
           </Link>

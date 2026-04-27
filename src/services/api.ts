@@ -211,3 +211,15 @@ export const getCommentaryHistory = (matchId: string) =>
 
 export const getDemoCommentary = () =>
   get<DemoCommentary>("/commentary/demo");
+
+/* ─── Live match ─────────────────────────────────────────────────────────── */
+
+export interface LiveMatchResponse extends MatchSummary {
+  note?: string;          // present when no live match — shows most recent
+  toss_winner?: string;
+  toss_decision?: string;
+  match_type?: string;
+}
+
+export const getLiveCurrentMatch = () =>
+  get<LiveMatchResponse>("/matches/live/current");
