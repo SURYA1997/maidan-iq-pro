@@ -30,6 +30,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Deploy the built worker + assets from dist/server/wrangler.json
-          # That config points main → index.js and assets → ../client
-          command: deploy --config dist/server/wrangler.json
+          # wrangler.deploy.json is committed to the repo and uses relative
+          # paths (dist/server/index.js, dist/client/) — no absolute paths
+          command: deploy --config wrangler.deploy.json
