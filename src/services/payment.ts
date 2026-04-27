@@ -31,9 +31,7 @@ interface RazorpayPaymentResponse {
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
 
-const BASE_URL =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ??
-  "http://localhost:8000";
+const BASE_URL = "https://maidan-iq-api-production.up.railway.app";
 
 const RAZORPAY_KEY =
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_RAZORPAY_KEY_ID) ?? "";

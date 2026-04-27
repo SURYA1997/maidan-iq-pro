@@ -63,9 +63,7 @@ function clearSession() {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const BASE_URL =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ??
-  "http://localhost:8000";
+const BASE_URL = "https://maidan-iq-api-production.up.railway.app";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);

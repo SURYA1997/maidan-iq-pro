@@ -7,10 +7,7 @@ import appCss from "../styles.css?url";
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
 
 function getGoogleClientId(): string {
-  if (typeof import.meta !== "undefined") {
-    return (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ?? "";
-  }
-  return "";
+  return "161798112953-16fnn9l4ab3ngkfvfshp1qkic5ktj7tc.apps.googleusercontent.com";
 }
 
 /* ─── 404 ───────────────────────────────────────────────────────────────── */
