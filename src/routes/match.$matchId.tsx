@@ -7,16 +7,24 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 import { AppLayout } from "@/components/pitchiq/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import {
   getMatchDetail,
   getMatchStory,
+  getMatchBowling,
+  getMatchFielding,
+  getMatchImpact,
   getPlayers,
   type MatchDetail,
   type MatchStory,
+  type MatchBowling,
+  type MatchFielding,
+  type MatchImpact,
+  type BowlerEntry,
   type PlayerSummary,
 } from "@/services/api";
 
@@ -61,64 +69,32 @@ function city(t: string) { return CITY[t] ?? t; }
 function accent(t: string) { return TEAM_ACCENT[t] ?? "#FF6B00"; }
 
 function winResult(m: MatchDetail): string {
-  if (m.win_by_wickets) {
-    return `${city(m.winner)} won by ${m.win_by_wickets} wicket${m.win_by_wickets === 1 ? "" : "s"}`;
-  }
-  if (m.win_by_runs) {
-    return `${city(m.winner)} won by ${m.win_by_runs} run${m.win_by_runs === 1 ? "" : "s"}`;
-  }
+  if (m.win_by_wickets) return `${city(m.winner)} won by ${m.win_by_wickets} wicket${m.win_by_wickets === 1 ? "" : "s"}`;
+  if (m.win_by_runs) return `${city(m.winner)} won by ${m.win_by_runs} run${m.win_by_runs === 1 ? "" : "s"}`;
   return `${city(m.winner)} won`;
 }
 
-/* ─── Section card wrapper ──────────────────────────────────────────────── */
+/* ─── Section card ───────────────────────────────────────────────────────── */
 
-function SectionCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+function SectionCard({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
-    <div
-      className="rounded-none bg-[#0F1117]"
-      style={{ border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}
-    >
+    <div className="rounded-none bg-[#0F1117]" style={{ border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}>
       <div className="flex items-baseline gap-2 px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
-          {title}
-        </span>
-        {subtitle && (
-          <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>{subtitle}</span>
-        )}
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>{title}</span>
+        {subtitle && <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>{subtitle}</span>}
       </div>
       {children}
     </div>
   );
 }
 
-/* ─── Skeleton ──────────────────────────────────────────────────────────── */
-
 function Skeleton({ h = "h-32" }: { h?: string }) {
-  return (
-    <div
-      className={`${h} animate-pulse rounded-none`}
-      style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }}
-    />
-  );
+  return <div className={`${h} animate-pulse rounded-none`} style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }} />;
 }
 
-/* ─── Innings tab ───────────────────────────────────────────────────────── */
+/* ─── Innings tab ────────────────────────────────────────────────────────── */
 
-function InningsTab({
-  active,
-  onChange,
-}: {
-  active: 1 | 2;
-  onChange: (n: 1 | 2) => void;
-}) {
+function InningsTab({ active, onChange }: { active: 1 | 2; onChange: (n: 1 | 2) => void }) {
   return (
     <div className="flex gap-1">
       {([1, 2] as const).map((n) => (
@@ -141,76 +117,37 @@ function InningsTab({
   );
 }
 
-/* ─── SECTION 1: Match header ───────────────────────────────────────────── */
+/* ─── Match header ───────────────────────────────────────────────────────── */
 
 function MatchHeader({ match }: { match: MatchDetail }) {
   return (
     <div className="mb-6">
-      {/* Back button */}
-      <Link
-        to="/matches"
-        className="mb-4 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.1em] transition-opacity hover:opacity-70"
-        style={{ color: "#6B7280" }}
-      >
+      <Link to="/matches" className="mb-4 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.1em] transition-opacity hover:opacity-70" style={{ color: "#6B7280" }}>
         ← MATCHES
       </Link>
-
-      {/* Team names */}
       <div className="flex flex-wrap items-baseline gap-3">
-        <span className="font-mono text-[28px] font-black leading-none" style={{ color: accent(match.team1) }}>
-          {city(match.team1)}
-        </span>
+        <span className="font-mono text-[28px] font-black leading-none" style={{ color: accent(match.team1) }}>{city(match.team1)}</span>
         <span className="font-mono text-[14px]" style={{ color: "#6B7280" }}>vs</span>
-        <span className="font-mono text-[28px] font-black leading-none" style={{ color: accent(match.team2) }}>
-          {city(match.team2)}
-        </span>
+        <span className="font-mono text-[28px] font-black leading-none" style={{ color: accent(match.team2) }}>{city(match.team2)}</span>
       </div>
-
-      {/* Meta */}
       <div className="mt-2 flex flex-wrap items-center gap-3 font-mono text-[11px]" style={{ color: "#6B7280" }}>
-        <span>{match.venue}</span>
-        <span>·</span>
-        <span>{match.date}</span>
-        <span>·</span>
-        <span>{match.event_name}</span>
-        <span>·</span>
-        <span>{match.season}</span>
+        <span>{match.venue}</span><span>·</span><span>{match.date}</span><span>·</span><span>{match.event_name}</span><span>·</span><span>{match.season}</span>
       </div>
-
-      {/* Result banner */}
       {match.winner && (
-        <div
-          className="mt-3 inline-flex items-center px-3 py-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.1em]"
-          style={{
-            background: `${accent(match.winner)}15`,
-            border: `1px solid ${accent(match.winner)}40`,
-            color: accent(match.winner),
-          }}
-        >
+        <div className="mt-3 inline-flex items-center px-3 py-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.1em]"
+          style={{ background: `${accent(match.winner)}15`, border: `1px solid ${accent(match.winner)}40`, color: accent(match.winner) }}>
           {winResult(match)}
         </div>
       )}
-
-      {/* Innings summaries */}
       {match.innings_summary.length > 0 && (
         <div className="mt-4 flex gap-3">
           {match.innings_summary.map((s) => {
             const battingTeam = s.innings_number === 1 ? match.team1 : match.team2;
             return (
-              <div
-                key={s.innings_number}
-                className="px-4 py-2.5 rounded-none"
-                style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <div className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1" style={{ color: "#6B7280" }}>
-                  {s.innings_number === 1 ? "1st" : "2nd"} · {city(battingTeam)}
-                </div>
-                <div className="font-mono text-2xl font-black" style={{ color: accent(battingTeam) }}>
-                  {s.total_runs}/{s.wickets}
-                </div>
-                <div className="font-mono text-[10px]" style={{ color: "#6B7280" }}>
-                  {s.overs_completed} overs
-                </div>
+              <div key={s.innings_number} className="px-4 py-2.5 rounded-none" style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="font-mono text-[9px] uppercase tracking-[0.12em] mb-1" style={{ color: "#6B7280" }}>{s.innings_number === 1 ? "1st" : "2nd"} · {city(battingTeam)}</div>
+                <div className="font-mono text-2xl font-black" style={{ color: accent(battingTeam) }}>{s.total_runs}/{s.wickets}</div>
+                <div className="font-mono text-[10px]" style={{ color: "#6B7280" }}>{s.overs_completed} overs</div>
               </div>
             );
           })}
@@ -220,20 +157,11 @@ function MatchHeader({ match }: { match: MatchDetail }) {
   );
 }
 
-/* ─── SECTION 2: Over-by-over timeline ─────────────────────────────────── */
+/* ─── Over timeline ──────────────────────────────────────────────────────── */
 
-function OverTimeline({
-  story,
-  innings,
-  nameLookup,
-}: {
-  story: MatchStory;
-  innings: 1 | 2;
-  nameLookup: Map<string, string>;
-}) {
+function OverTimeline({ story, innings, nameLookup }: { story: MatchStory; innings: 1 | 2; nameLookup: Map<string, string> }) {
   const overs = story.innings_timeline[String(innings)] ?? [];
   const name = (id: string) => nameLookup.get(id) ?? id.slice(0, 8);
-
   return (
     <SectionCard title="OVER BY OVER" subtitle={`// innings ${innings}`}>
       <div className="overflow-x-auto">
@@ -241,27 +169,17 @@ function OverTimeline({
           <thead>
             <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               {["OV", "RUNS", "WKT", "SCORE", "BATTER", "BOWLER"].map((h) => (
-                <th key={h} className="px-3 py-2 text-left" style={{ color: "#6B7280", fontSize: 9, letterSpacing: "0.1em" }}>
-                  {h}
-                </th>
+                <th key={h} className="px-3 py-2 text-left" style={{ color: "#6B7280", fontSize: 9, letterSpacing: "0.1em" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {overs.map((o) => (
-              <tr
-                key={o.over_number}
-                className="hover:bg-white/[0.02]"
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-              >
+              <tr key={o.over_number} className="hover:bg-white/[0.02]" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                 <td className="px-3 py-2 font-bold" style={{ color: "#6B7280" }}>{o.over_number + 1}</td>
                 <td className="px-3 py-2 font-bold" style={{ color: "#F0F0F0" }}>{o.runs_that_over}</td>
-                <td className="px-3 py-2 font-bold" style={{ color: o.wickets_that_over > 0 ? "#EF4444" : "#6B7280" }}>
-                  {o.wickets_that_over > 0 ? o.wickets_that_over : "—"}
-                </td>
-                <td className="px-3 py-2 font-bold" style={{ color: "#F0F0F0" }}>
-                  {o.cumulative_score}/{o.cumulative_wickets}
-                </td>
+                <td className="px-3 py-2 font-bold" style={{ color: o.wickets_that_over > 0 ? "#EF4444" : "#6B7280" }}>{o.wickets_that_over > 0 ? o.wickets_that_over : "—"}</td>
+                <td className="px-3 py-2 font-bold" style={{ color: "#F0F0F0" }}>{o.cumulative_score}/{o.cumulative_wickets}</td>
                 <td className="px-3 py-2" style={{ color: "#9CA3AF" }}>{name(o.key_batter)}</td>
                 <td className="px-3 py-2" style={{ color: "#9CA3AF" }}>{name(o.key_bowler)}</td>
               </tr>
@@ -273,42 +191,28 @@ function OverTimeline({
   );
 }
 
-/* ─── SECTION 3: Partnership map ───────────────────────────────────────── */
+/* ─── Partnership map ────────────────────────────────────────────────────── */
 
 const CustomBarTooltip = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   const sr = d.balls > 0 ? ((d.runs / d.balls) * 100).toFixed(1) : "—";
   return (
-    <div
-      className="rounded-none px-3 py-2 font-mono text-[11px]"
-      style={{ background: "#1A1A1A", border: "none", borderLeft: "3px solid var(--accent-primary)", boxShadow: "none" }}
-    >
+    <div className="rounded-none px-3 py-2 font-mono text-[11px]" style={{ background: "#1A1A1A", borderLeft: "3px solid var(--accent-primary)", boxShadow: "none" }}>
       <div className="font-bold" style={{ color: "#F0F0F0" }}>{d.label}</div>
-      <div style={{ color: "#9CA3AF" }}>{d.runs} runs off {d.balls} balls</div>
-      <div style={{ color: "#9CA3AF" }}>SR: {sr}{d.wicketFell ? " · Wicket fell" : " · Not out"}</div>
+      <div style={{ color: "#9CA3AF" }}>{d.runs} runs off {d.balls} balls · SR: {sr}</div>
+      <div style={{ color: "#9CA3AF" }}>{d.wicketFell ? "Wicket fell" : "Not out"}</div>
     </div>
   );
 };
 
-function PartnershipMap({
-  story,
-  innings,
-  nameLookup,
-  teamColor,
-}: {
-  story: MatchStory;
-  innings: 1 | 2;
-  nameLookup: Map<string, string>;
-  teamColor: string;
-}) {
+function PartnershipMap({ story, innings, nameLookup, teamColor }: { story: MatchStory; innings: 1 | 2; nameLookup: Map<string, string>; teamColor: string }) {
   const name = (id: string) => {
     const n = nameLookup.get(id);
     if (!n) return id.slice(0, 6);
     const parts = n.split(" ");
     return parts.length > 1 ? `${parts[0][0]}. ${parts[parts.length - 1]}` : n;
   };
-
   const data = story.partnerships
     .filter((p) => p.innings_number === innings)
     .map((p, i) => ({
@@ -318,11 +222,8 @@ function PartnershipMap({
       wicketFell: p.wicket_fell,
       idx: i + 1,
     }));
-
   const highest = data.reduce((max, p) => (p.runs > max.runs ? p : max), data[0] ?? { runs: 0, label: "—", balls: 0, wicketFell: false, idx: 0 });
   const avg = data.length ? Math.round(data.reduce((s, p) => s + p.runs, 0) / data.length) : 0;
-
-  const chartHeight = Math.max(120, data.length * 44);
 
   return (
     <SectionCard title="PARTNERSHIP MAP" subtitle={`// innings ${innings} · ${data.length} stands`}>
@@ -330,42 +231,17 @@ function PartnershipMap({
         <div className="px-5 py-6 font-mono text-[11px]" style={{ color: "#6B7280" }}>NO DATA</div>
       ) : (
         <>
-          <div style={{ height: chartHeight }} className="px-4 py-4">
+          <div style={{ height: Math.max(120, data.length * 44) }} className="px-4 py-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={data} margin={{ top: 0, right: 20, bottom: 0, left: 10 }}>
-                <XAxis
-                  type="number"
-                  tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={130}
-                  tick={{ fill: "#9CA3AF", fontSize: 10, fontFamily: "var(--font-mono)" }}
-                  tickLine={false}
-                  axisLine={false}
-                />
+                <XAxis type="number" tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} />
+                <YAxis type="category" dataKey="label" width={130} tick={{ fill: "#9CA3AF", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                <Bar dataKey="runs" radius={0}>
-                  {data.map((entry) => (
-                    <Cell
-                      key={entry.idx}
-                      fill={teamColor}
-                      fillOpacity={entry.wicketFell ? 0.5 : 0.7}
-                    />
-                  ))}
-                </Bar>
+                <Bar dataKey="runs" radius={0} fill={teamColor} fillOpacity={0.65} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Summary stats */}
-          <div
-            className="flex flex-wrap gap-6 px-5 py-3"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-          >
+          <div className="flex flex-wrap gap-6 px-5 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             <div>
               <div className="font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>PARTNERSHIPS</div>
               <div className="font-mono text-lg font-black" style={{ color: "#F0F0F0" }}>{data.length}</div>
@@ -386,53 +262,27 @@ function PartnershipMap({
   );
 }
 
-/* ─── SECTION 4: Wickets timeline ───────────────────────────────────────── */
+/* ─── Wickets timeline ───────────────────────────────────────────────────── */
 
-function WicketsTimeline({
-  story,
-  innings,
-  nameLookup,
-}: {
-  story: MatchStory;
-  innings: 1 | 2;
-  nameLookup: Map<string, string>;
-}) {
+function WicketsTimeline({ story, innings, nameLookup }: { story: MatchStory; innings: 1 | 2; nameLookup: Map<string, string> }) {
   const wickets = story.wickets.filter((w) => w.innings_number === innings);
   const name = (id: string) => nameLookup.get(id) ?? id.slice(0, 8);
-
   return (
     <SectionCard title="WICKETS" subtitle={`// fall of wickets · innings ${innings}`}>
       {wickets.length === 0 ? (
         <div className="px-5 py-4 font-mono text-[11px]" style={{ color: "#6B7280" }}>NO WICKETS</div>
       ) : (
-        <div className="px-5 py-3 space-y-0">
+        <div className="px-5 py-3">
           {wickets.map((w, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 py-2"
-              style={{ borderBottom: i < wickets.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}
-            >
-              <div
-                className="flex h-6 w-6 shrink-0 items-center justify-center font-mono text-[10px] font-bold"
-                style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444" }}
-              >
-                {i + 1}
-              </div>
+            <div key={i} className="flex items-center gap-4 py-2" style={{ borderBottom: i < wickets.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center font-mono text-[10px] font-bold" style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444" }}>{i + 1}</div>
               <div className="flex-1">
-                <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
-                  {name(w.wicket_player_out)}
-                </span>
-                <span className="ml-2 font-mono text-[11px] capitalize" style={{ color: "#9CA3AF" }}>
-                  {w.wicket_kind}
-                </span>
+                <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>{name(w.wicket_player_out)}</span>
+                <span className="ml-2 font-mono text-[11px] capitalize" style={{ color: "#9CA3AF" }}>{w.wicket_kind}</span>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[11px] font-bold" style={{ color: "#F0F0F0" }}>
-                  {w.score_at_fall}
-                </div>
-                <div className="font-mono text-[9px]" style={{ color: "#6B7280" }}>
-                  ov {w.over_number + 1}.{w.ball_number}
-                </div>
+                <div className="font-mono text-[11px] font-bold" style={{ color: "#F0F0F0" }}>{w.score_at_fall}</div>
+                <div className="font-mono text-[9px]" style={{ color: "#6B7280" }}>ov {w.over_number + 1}.{w.ball_number}</div>
               </div>
             </div>
           ))}
@@ -442,28 +292,269 @@ function WicketsTimeline({
   );
 }
 
-/* ─── Coming soon section ───────────────────────────────────────────────── */
+/* ─── Bowling heatmap cell ───────────────────────────────────────────────── */
 
-function ComingSoon({ title, subtitle }: { title: string; subtitle: string }) {
+function heatColor(runs: number): { bg: string; text: string } {
+  if (runs <= 5) return { bg: "#1B5E20", text: "#A5D6A7" };
+  if (runs <= 7) return { bg: "#388E3C", text: "#C8E6C9" };
+  if (runs <= 9) return { bg: "#F9A825", text: "#1A1A1A" };
+  if (runs <= 11) return { bg: "#E65100", text: "#FFE0B2" };
+  return { bg: "#B71C1C", text: "#FFCDD2" };
+}
+
+/* ─── BOWLING INTELLIGENCE ───────────────────────────────────────────────── */
+
+function BowlingIntelligence({ data, innings }: { data: MatchBowling; innings: 1 | 2 }) {
+  const inn = innings === 1 ? data.innings_1 : data.innings_2;
+  const [selectedBowler, setSelectedBowler] = useState<BowlerEntry | null>(null);
+  const bowler = selectedBowler ?? inn.bowlers[0] ?? null;
+  const maxImpact = Math.max(...inn.bowlers.map((b) => b.impact_score), 1);
+
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  // Reset selection when innings changes
+  useEffect(() => { setSelectedBowler(null); setExpanded(null); }, [innings]);
+
+  if (!inn.bowlers.length) return (
+    <SectionCard title="BOWLING INTELLIGENCE" subtitle="// match analysis">
+      <div className="px-5 py-6 font-mono text-[11px]" style={{ color: "#6B7280" }}>NO BOWLING DATA</div>
+    </SectionCard>
+  );
+
   return (
-    <div
-      className="rounded-none bg-[#0F1117]"
-      style={{ border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid rgba(255,107,0,0.3)" }}
-    >
-      <div className="flex items-baseline gap-2 px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
-          {title}
-        </span>
-        <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>{subtitle}</span>
+    <SectionCard title="BOWLING INTELLIGENCE" subtitle={`// ${city(inn.team)} bowling`}>
+      {/* Bowler hierarchy */}
+      <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+        {inn.bowlers.map((b, i) => {
+          const isExpanded = expanded === b.name;
+          const isSelected = bowler?.name === b.name;
+          return (
+            <div key={b.name}>
+              <div
+                className="flex cursor-pointer items-start gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors"
+                style={{ background: isSelected ? "rgba(255,107,0,0.04)" : undefined }}
+                onClick={() => {
+                  setSelectedBowler(b);
+                  setExpanded(isExpanded ? null : b.name);
+                }}
+              >
+                {/* Rank */}
+                <span className="mt-0.5 w-5 shrink-0 font-mono text-[20px] font-black leading-none tabular-nums" style={{ color: "rgba(255,255,255,0.1)" }}>{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  {/* Name + impact */}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-mono text-[13px] font-bold truncate" style={{ color: "#F0F0F0" }}>{b.name}</span>
+                    <div className="shrink-0 text-right">
+                      <div className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: "#6B7280" }}>IMPACT</div>
+                      <div className="font-mono text-[15px] font-black" style={{ color: "var(--accent-primary)" }}>{b.impact_score.toFixed(0)}</div>
+                    </div>
+                  </div>
+                  {/* Impact bar */}
+                  <div className="my-1.5 h-1 rounded-none" style={{ background: "rgba(255,107,0,0.15)", width: "100%" }}>
+                    <div className="h-1" style={{ background: "var(--accent-primary)", width: `${(b.impact_score / maxImpact) * 100}%`, opacity: 0.7 }} />
+                  </div>
+                  {/* Stats row */}
+                  <div className="flex flex-wrap gap-3 font-mono text-[11px]" style={{ color: "#9CA3AF" }}>
+                    <span>{b.stats.overs}ov</span>
+                    <span>{b.stats.runs}r</span>
+                    <span style={{ color: b.stats.wickets > 0 ? "#EF4444" : "#9CA3AF" }}>{b.stats.wickets}w</span>
+                    <span>Econ: {b.stats.economy}</span>
+                    <span>DOT%: {b.stats.dot_ball_pct}%</span>
+                  </div>
+                </div>
+              </div>
+              {/* Expanded phase breakdown */}
+              {isExpanded && (
+                <div className="grid grid-cols-3 gap-px px-5 pb-3 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  {(["powerplay", "middle", "death"] as const).map((ph) => {
+                    const p = b.phase_breakdown[ph];
+                    return (
+                      <div key={ph} className="py-2 text-center">
+                        <div className="font-mono text-[9px] uppercase tracking-[0.1em] mb-1" style={{ color: "#6B7280" }}>{ph}</div>
+                        <div className="font-mono text-[11px]" style={{ color: "#F0F0F0" }}>{p.overs}ov {p.runs}r {p.wickets}w</div>
+                        <div className="font-mono text-[10px]" style={{ color: "#9CA3AF" }}>Econ {p.economy}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <div className="px-5 py-6 text-center font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
-        INTELLIGENCE LOADING // COMING SOON
-      </div>
-    </div>
+
+      {/* Heatmap */}
+      {bowler && (
+        <div className="px-5 pb-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
+            OVER BY OVER // {bowler.name}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {Array.from({ length: 20 }, (_, i) => {
+              const ov = bowler.over_by_over.find((o) => o.over_number === i);
+              const colors = ov ? heatColor(ov.runs_conceded) : { bg: "#1A1A2E", text: "#4B5563" };
+              return (
+                <div
+                  key={i}
+                  title={ov ? `Ov ${i + 1}: ${ov.runs_conceded}r ${ov.wickets}w` : `Ov ${i + 1}: not bowled`}
+                  className="relative flex flex-col items-center justify-center"
+                  style={{ width: 44, height: 44, background: colors.bg, flexShrink: 0 }}
+                >
+                  {ov ? (
+                    <>
+                      <span className="font-mono text-[13px] font-bold" style={{ color: colors.text }}>{ov.runs_conceded}</span>
+                      <span className="font-mono text-[8px]" style={{ color: colors.text, opacity: 0.7 }}>ov{i + 1}</span>
+                      {ov.wickets > 0 && (
+                        <span className="absolute right-0.5 top-0.5 font-mono text-[8px] font-bold" style={{ color: "#fff" }}>W</span>
+                      )}
+                      {ov.is_maiden && (
+                        <span className="absolute left-0.5 top-0.5 font-mono text-[8px] font-bold" style={{ color: "#fff" }}>M</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="font-mono text-[9px]" style={{ color: "#4B5563" }}>{i + 1}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
-/* ─── Page ──────────────────────────────────────────────────────────────── */
+/* ─── FIELDING INTELLIGENCE ──────────────────────────────────────────────── */
+
+const DISMISSAL_COLORS: Record<string, string> = {
+  caught: "#FF6B00",
+  bowled: "#2196F3",
+  lbw: "#9C27B0",
+  run_out: "#F44336",
+  stumped: "#4CAF50",
+  caught_and_bowled: "#FF9800",
+  other: "#607D8B",
+};
+
+const DISMISSAL_LABELS: Record<string, string> = {
+  caught: "Caught",
+  bowled: "Bowled",
+  lbw: "LBW",
+  run_out: "Run Out",
+  stumped: "Stumped",
+  caught_and_bowled: "C&B",
+  other: "Other",
+};
+
+function FieldingIntelligence({ data }: { data: MatchFielding }) {
+  const pieData = Object.entries(data.dismissal_breakdown)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => ({ name: DISMISSAL_LABELS[k] ?? k, value: v, fill: DISMISSAL_COLORS[k] ?? "#607D8B" }));
+
+  const total = pieData.reduce((s, d) => s + d.value, 0);
+
+  return (
+    <SectionCard title="FIELDING INTELLIGENCE" subtitle="// match impact">
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
+        {/* Left — heroes */}
+        <div className="px-5 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>FIELDING HEROES</div>
+          {data.fielding_heroes.length === 0 ? (
+            <div className="font-mono text-[11px]" style={{ color: "#6B7280" }}>NO FIELDING DATA</div>
+          ) : (
+            <div className="space-y-0">
+              {data.fielding_heroes.map((h, i) => (
+                <div key={h.name} className="flex items-center gap-3 py-2" style={{ borderBottom: i < data.fielding_heroes.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <span className="w-4 shrink-0 font-mono text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.2)" }}>{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-[12px] font-bold truncate" style={{ color: accent(h.team) || "#F0F0F0" }}>{h.name}</div>
+                    <div className="font-mono text-[10px]" style={{ color: "#6B7280" }}>
+                      C:{h.catches} RO:{h.run_outs} St:{h.stumpings}{h.caught_and_bowled > 0 ? ` C&B:${h.caught_and_bowled}` : ""}
+                    </div>
+                  </div>
+                  <span className="font-mono text-[13px] font-black shrink-0" style={{ color: "var(--accent-primary)" }}>{h.fielding_score}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right — dismissal donut */}
+        <div className="flex flex-col items-center px-5 py-3">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>DISMISSAL BREAKDOWN</div>
+          {total > 0 ? (
+            <>
+              <PieChart width={180} height={180}>
+                <Pie data={pieData} dataKey="value" cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} />
+              </PieChart>
+              {/* Legend */}
+              <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
+                {pieData.map((d) => (
+                  <div key={d.name} className="flex items-center gap-1">
+                    <div className="h-2 w-2 shrink-0 rounded-full" style={{ background: d.fill }} />
+                    <span className="font-mono text-[9px]" style={{ color: "#9CA3AF" }}>{d.name} {d.value}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="font-mono text-[11px]" style={{ color: "#6B7280" }}>NO DISMISSALS</div>
+          )}
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
+
+/* ─── MATCH MVP ──────────────────────────────────────────────────────────── */
+
+const ROLE_STYLE: Record<string, { label: string; color: string }> = {
+  batsman:    { label: "BAT",  color: "#2196F3" },
+  bowler:     { label: "BOWL", color: "#E65100" },
+  allrounder: { label: "ALL",  color: "#4CAF50" },
+};
+
+function MatchMVP({ data, match }: { data: MatchImpact; match: MatchDetail }) {
+  const top5 = data.mvp_ranking.slice(0, 5);
+  return (
+    <SectionCard title="MATCH MVP" subtitle="// impact ranking">
+      <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+        {top5.map((p, i) => {
+          const role = ROLE_STYLE[p.role] ?? ROLE_STYLE.batsman;
+          const isTop = i === 0;
+          return (
+            <div
+              key={p.name}
+              className="flex items-start gap-3 px-5 py-3"
+              style={{ boxShadow: isTop ? "inset 0 0 0 1px rgba(255,107,0,0.2)" : undefined, background: isTop ? "rgba(255,107,0,0.03)" : undefined }}
+            >
+              <span className="mt-0.5 shrink-0 font-mono text-[26px] font-black leading-none tabular-nums" style={{ color: "var(--accent-primary)" }}>
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-[13px] font-bold" style={{ color: accent(p.team) }}>{p.name}</span>
+                  <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase" style={{ background: `${role.color}20`, color: role.color }}>
+                    {role.label}
+                  </span>
+                </div>
+                <div className="mt-0.5 font-mono text-[10px]" style={{ color: "#6B7280" }}>
+                  BAT: {p.batting_impact.toFixed(1)} · BOWL: {p.bowling_impact.toFixed(1)} · FLD: {p.fielding_impact.toFixed(1)}
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="font-mono text-[22px] font-black" style={{ color: "#F0F0F0" }}>{p.total_impact.toFixed(0)}</div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.08em]" style={{ color: "#6B7280" }}>PTS</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────────────────────────── */
 
 function MatchDeepDivePage() {
   const { matchId } = Route.useParams();
@@ -471,6 +562,9 @@ function MatchDeepDivePage() {
 
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [story, setStory] = useState<MatchStory | null>(null);
+  const [bowling, setBowling] = useState<MatchBowling | null>(null);
+  const [fielding, setFielding] = useState<MatchFielding | null>(null);
+  const [impact, setImpact] = useState<MatchImpact | null>(null);
   const [players, setPlayers] = useState<PlayerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -481,23 +575,25 @@ function MatchDeepDivePage() {
     Promise.all([
       getMatchDetail(matchId),
       getMatchStory(matchId),
+      getMatchBowling(matchId),
+      getMatchFielding(matchId),
+      getMatchImpact(matchId),
       getPlayers(),
     ])
-      .then(([m, s, p]) => {
+      .then(([m, s, b, f, imp, p]) => {
         setMatch(m);
         setStory(s);
+        setBowling(b);
+        setFielding(f);
+        setImpact(imp);
         setPlayers(p);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [matchId]);
 
-  const nameLookup = useMemo(
-    () => new Map(players.map((p) => [p.registry_id, p.name])),
-    [players],
-  );
+  const nameLookup = useMemo(() => new Map(players.map((p) => [p.registry_id, p.name])), [players]);
 
-  // Determine batting teams per innings
   const team1Color = match ? accent(match.team1) : "var(--accent-primary)";
   const team2Color = match ? accent(match.team2) : "var(--accent-primary)";
   const inningsTeamColor = innings === 1 ? team1Color : team2Color;
@@ -507,68 +603,48 @@ function MatchDeepDivePage() {
       <AppLayout pageName="MATCHES">
         <div className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-20 lg:pb-6">
 
-          {/* Error state */}
           {error && (
             <div className="py-16 text-center">
-              <div className="font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>
-                MATCH NOT FOUND
-              </div>
-              <Link
-                to="/matches"
-                className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.1em]"
-                style={{ color: "var(--accent-primary)" }}
-              >
+              <div className="font-mono text-[11px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>MATCH NOT FOUND</div>
+              <Link to="/matches" className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.1em]" style={{ color: "var(--accent-primary)" }}>
                 ← BACK TO MATCHES
               </Link>
             </div>
           )}
 
-          {/* Loading state */}
           {loading && !error && (
             <div className="space-y-4">
               <Skeleton h="h-40" />
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <Skeleton h="h-64" />
-                <Skeleton h="h-64" />
-              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2"><Skeleton h="h-64" /><Skeleton h="h-64" /></div>
               <Skeleton h="h-48" />
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3"><Skeleton h="h-80" /><Skeleton h="h-80" /><Skeleton h="h-80" /></div>
             </div>
           )}
 
-          {/* Content */}
           {!loading && !error && match && story && (
             <>
-              {/* Header */}
               <MatchHeader match={match} />
 
-              {/* Innings selector */}
               {story.innings_timeline["2"] && (
                 <div className="mb-5">
                   <InningsTab active={innings} onChange={setInnings} />
                 </div>
               )}
 
-              {/* Two-column layout on desktop */}
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 mb-4">
                 <OverTimeline story={story} innings={innings} nameLookup={nameLookup} />
                 <WicketsTimeline story={story} innings={innings} nameLookup={nameLookup} />
               </div>
 
-              {/* Partnership map — full width */}
               <div className="mb-4">
-                <PartnershipMap
-                  story={story}
-                  innings={innings}
-                  nameLookup={nameLookup}
-                  teamColor={inningsTeamColor}
-                />
+                <PartnershipMap story={story} innings={innings} nameLookup={nameLookup} teamColor={inningsTeamColor} />
               </div>
 
-              {/* Coming soon sections */}
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-4">
-                <ComingSoon title="MATCH MVP" subtitle="// impact ranking" />
-                <ComingSoon title="BOWLING INTELLIGENCE" subtitle="// match analysis" />
-                <ComingSoon title="FIELDING INTELLIGENCE" subtitle="// match impact" />
+              {/* Intelligence sections */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
+                {impact && match ? <MatchMVP data={impact} match={match} /> : <Skeleton h="h-80" />}
+                {bowling ? <BowlingIntelligence data={bowling} innings={innings} /> : <Skeleton h="h-80" />}
+                {fielding ? <FieldingIntelligence data={fielding} /> : <Skeleton h="h-80" />}
               </div>
             </>
           )}

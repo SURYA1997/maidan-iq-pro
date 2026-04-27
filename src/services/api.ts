@@ -242,6 +242,111 @@ export const getCommentaryHistory = (matchId: string) =>
 export const getDemoCommentary = () =>
   get<DemoCommentary>("/commentary/demo");
 
+/* ─── Match Intelligence ─────────────────────────────────────────────────── */
+
+export interface BowlerOverEntry {
+  over_number: number;
+  runs_conceded: number;
+  balls: number;
+  wickets: number;
+  dots: number;
+  is_maiden: boolean;
+  economy: number;
+}
+
+export interface BowlerPhaseStats {
+  overs: number;
+  runs: number;
+  wickets: number;
+  economy: number;
+}
+
+export interface BowlerStats {
+  overs: number;
+  runs: number;
+  wickets: number;
+  economy: number;
+  dot_balls: number;
+  dot_ball_pct: number;
+  fours_conceded: number;
+  sixes_conceded: number;
+  wides: number;
+  no_balls: number;
+}
+
+export interface BowlerEntry {
+  name: string;
+  impact_score: number;
+  stats: BowlerStats;
+  phase_breakdown: {
+    powerplay: BowlerPhaseStats;
+    middle: BowlerPhaseStats;
+    death: BowlerPhaseStats;
+  };
+  over_by_over: BowlerOverEntry[];
+}
+
+export interface BowlingInningsData {
+  team: string;
+  bowlers: BowlerEntry[];
+}
+
+export interface MatchBowling {
+  match_id: string;
+  innings_1: BowlingInningsData;
+  innings_2: BowlingInningsData;
+}
+
+export interface FieldingHero {
+  name: string;
+  team: string;
+  catches: number;
+  caught_and_bowled: number;
+  run_outs: number;
+  stumpings: number;
+  fielding_score: number;
+}
+
+export interface DismissalBreakdown {
+  caught: number;
+  bowled: number;
+  lbw: number;
+  run_out: number;
+  stumped: number;
+  caught_and_bowled: number;
+  other: number;
+}
+
+export interface MatchFielding {
+  match_id: string;
+  fielding_heroes: FieldingHero[];
+  dismissal_breakdown: DismissalBreakdown;
+}
+
+export interface MVPEntry {
+  name: string;
+  team: string;
+  batting_impact: number;
+  bowling_impact: number;
+  fielding_impact: number;
+  total_impact: number;
+  role: "batsman" | "bowler" | "allrounder";
+}
+
+export interface MatchImpact {
+  match_id: string;
+  mvp_ranking: MVPEntry[];
+}
+
+export const getMatchBowling = (matchId: string) =>
+  get<MatchBowling>(`/matches/${matchId}/bowling`);
+
+export const getMatchFielding = (matchId: string) =>
+  get<MatchFielding>(`/matches/${matchId}/fielding`);
+
+export const getMatchImpact = (matchId: string) =>
+  get<MatchImpact>(`/matches/${matchId}/impact`);
+
 /* ─── Live match ─────────────────────────────────────────────────────────── */
 
 export interface LiveMatchResponse extends MatchSummary {
