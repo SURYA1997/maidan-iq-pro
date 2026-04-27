@@ -187,9 +187,9 @@ function LiveNowSection() {
               </div>
             )}
 
-            {/* CTA */}
-            {isLive && (
-              <div className="mt-4">
+            {/* CTAs */}
+            <div className="mt-4 flex gap-3">
+              {isLive && (
                 <Link
                   to="/live"
                   className="inline-flex items-center gap-2 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-black transition-opacity hover:opacity-90"
@@ -197,8 +197,22 @@ function LiveNowSection() {
                 >
                   WATCH LIVE →
                 </Link>
-              </div>
-            )}
+              )}
+              {match.id && (
+                <Link
+                  to="/match/$matchId"
+                  params={{ matchId: match.id }}
+                  className="inline-flex items-center px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.1em] transition-opacity hover:opacity-80"
+                  style={{
+                    background: "transparent",
+                    border: "1px solid var(--border)",
+                    color: "#9CA3AF",
+                  }}
+                >
+                  DEEP DIVE →
+                </Link>
+              )}
+            </div>
           </div>
         </Card>
       )}
@@ -217,39 +231,42 @@ function RecentResultsSection({ matches }: { matches: MatchSummary[] }) {
 
       <div className="space-y-2">
         {recent.map((m) => (
-          <Card key={m.id}>
-            <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
-                    {city(m.team1)}
-                  </span>
-                  <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>vs</span>
-                  <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
-                    {city(m.team2)}
-                  </span>
+          <Link
+            key={m.id}
+            to="/match/$matchId"
+            params={{ matchId: m.id }}
+            className="block transition-opacity hover:opacity-80"
+          >
+            <Card>
+              <div className="flex items-center justify-between gap-4 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+                      {city(m.team1)}
+                    </span>
+                    <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>vs</span>
+                    <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+                      {city(m.team2)}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 font-mono text-[10px]" style={{ color: "#6B7280" }}>
+                    {m.venue} · {m.date}
+                  </div>
                 </div>
-                <div className="mt-0.5 font-mono text-[10px]" style={{ color: "#6B7280" }}>
-                  {m.venue} · {m.date}
+                <div className="shrink-0 text-right space-y-1">
+                  <div
+                    className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em]"
+                    style={{ color: accent(m.winner) }}
+                  >
+                    {city(m.winner)} WON
+                  </div>
+                  <span className="block font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: "#6B7280" }}>
+                    DEEP DIVE →
+                  </span>
                 </div>
               </div>
-              <div className="shrink-0 text-right space-y-1">
-                <div
-                  className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em]"
-                  style={{ color: accent(m.winner) }}
-                >
-                  {city(m.winner)} WON
-                </div>
-                <Link
-                  to="/story"
-                  className="block font-mono text-[9px] uppercase tracking-[0.1em] transition-opacity hover:opacity-70"
-                  style={{ color: "#6B7280" }}
-                >
-                  VIEW STORY →
-                </Link>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         ))}
       </div>
     </section>
@@ -276,10 +293,12 @@ function AllMatchesSection({ matches }: { matches: MatchSummary[] }) {
 
         <div className="max-h-[480px] overflow-y-auto">
           {matches.map((m, i) => (
-            <div
+            <Link
               key={m.id}
-              className="grid grid-cols-[1fr_1fr_auto] gap-3 px-4 py-2.5 hover:bg-white/[0.02]"
-              style={{ borderBottom: i < matches.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}
+              to="/match/$matchId"
+              params={{ matchId: m.id }}
+              className="grid grid-cols-[1fr_1fr_auto] gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors"
+              style={{ borderBottom: i < matches.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "grid" }}
             >
               <div>
                 <span className="font-mono text-[12px]" style={{ color: "#F0F0F0" }}>
@@ -296,7 +315,7 @@ function AllMatchesSection({ matches }: { matches: MatchSummary[] }) {
               >
                 {city(m.winner)}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </Card>

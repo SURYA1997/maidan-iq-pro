@@ -170,6 +170,36 @@ export const getPlayerMatchup = (
   venue?: string,
 ) => get<PlayerMatchup>(`/players/${registryId}/matchup${qs({ phase, venue })}`);
 
+/* ─── Full match detail (richer than MatchSummary) ──────────────────────── */
+
+export interface InningsSummary {
+  innings_number: number;
+  total_runs: number;
+  wickets: number;
+  overs_completed: number;
+}
+
+export interface MatchDetail {
+  id: string;
+  event_name: string;
+  season: string;
+  date: string;
+  venue: string;
+  city: string;
+  team1: string;
+  team2: string;
+  toss_winner: string;
+  toss_decision: string;
+  winner: string;
+  win_by_runs: number | null;
+  win_by_wickets: number | null;
+  match_type: string;
+  innings_summary: InningsSummary[];
+}
+
+export const getMatchDetail = (matchId: string) =>
+  get<MatchDetail>(`/matches/${matchId}`);
+
 // Matches
 export const getMatches = (season?: string, team?: string) =>
   get<MatchSummary[]>(`/matches${qs({ season, team })}`);

@@ -16,6 +16,7 @@ import { Route as SquadsRouteImport } from './routes/squads'
 import { Route as SeasonPassRouteImport } from './routes/season-pass'
 import { Route as MatchupRouteImport } from './routes/matchup'
 import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as MatchMatchIdRouteImport } from './routes/match.$matchId'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as GuideRouteImport } from './routes/guide'
@@ -57,6 +58,11 @@ const MatchesRoute = MatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MatchMatchIdRoute = MatchMatchIdRouteImport.update({
+  id: '/match/$matchId',
+  path: '/match/$matchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
+  '/match/$matchId': typeof MatchMatchIdRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
+  '/match/$matchId': typeof MatchMatchIdRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
+  '/match/$matchId': typeof MatchMatchIdRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/matches': typeof MatchesRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fantasy'
     | '/guide'
+    | '/match/$matchId'
     | '/live'
     | '/login'
     | '/matches'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fantasy'
     | '/guide'
+    | '/match/$matchId'
     | '/live'
     | '/login'
     | '/matches'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/fantasy'
     | '/guide'
+    | '/match/$matchId'
     | '/live'
     | '/login'
     | '/matches'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FantasyRoute: typeof FantasyRoute
   GuideRoute: typeof GuideRoute
+  MatchMatchIdRoute: typeof MatchMatchIdRoute
   LiveRoute: typeof LiveRoute
   LoginRoute: typeof LoginRoute
   MatchesRoute: typeof MatchesRoute
@@ -237,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/match/$matchId': {
+      id: '/match/$matchId'
+      path: '/match/$matchId'
+      fullPath: '/match/$matchId'
+      preLoaderRoute: typeof MatchMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FantasyRoute: FantasyRoute,
   GuideRoute: GuideRoute,
+  MatchMatchIdRoute: MatchMatchIdRoute,
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   MatchesRoute: MatchesRoute,
