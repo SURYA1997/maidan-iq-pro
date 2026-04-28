@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MaidanIQ — Cricket Intelligence Terminal</title>
+  <meta name="description" content="AI-powered match intelligence for IPL 2026. Pressure Index, Win Probability, Degen Agent, Matchup Oracle. Built for fans who want to understand cricket, not just watch it." />
+  <meta property="og:title" content="MaidanIQ — Cricket Intelligence Terminal" />
+  <meta property="og:description" content="AI-powered match intelligence for IPL 2026. Pressure Index, Win Probability, Degen Agent, Matchup Oracle." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://maidaniq.com" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MaidanIQ — Cricket Intelligence Terminal" />
+  <meta name="twitter:description" content="AI-powered match intelligence for IPL 2026. Pressure Index, Win Probability, Degen Agent, Matchup Oracle." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #080810;
+      --surface: #0F1117;
+      --accent:  #FF6B00;
+      --white:   #F0F0F0;
+      --muted:   #666688;
+      --border:  #1E1E2E;
+      --live:    #22C55E;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      background: rgba(8, 8, 16, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    nav .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.18em;
+      text-decoration: none;
+    }
+    nav .nav-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    nav .nav-link:hover { color: var(--accent); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,107,0,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,107,0,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,107,0,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 760px; }
+
+    .hero-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .hero-headline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 900;
+      line-height: 0.92;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .hero-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(22px, 3.5vw, 36px);
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+    .hero-body {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 40px;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #000;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 32px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .cta-btn:hover {
+      transform: scale(1.03);
+      background: #FF8C2A;
+    }
+    .cta-note {
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      animation: bounce 2.4s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px;
+    }
+    .stats-grid {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 96px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 20px;
+      color: var(--accent);
+      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .feature-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .feature-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* ── TERMINAL PREVIEW ── */
+    .terminal-section {
+      padding: 96px 24px;
+      text-align: center;
+      background: rgba(15,17,23,0.5);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-section .section-title { margin-bottom: 8px; }
+    .terminal-section .section-sub { margin-bottom: 48px; }
+    .terminal-window {
+      max-width: 900px;
+      margin: 0 auto 40px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-top: 2px solid var(--accent);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+      text-align: left;
+    }
+    .terminal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .terminal-topbar-left {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--white);
+      letter-spacing: 0.1em;
+    }
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--live);
+      animation: livepulse 1.6s infinite;
+    }
+    @keyframes livepulse {
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+      70%  { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    }
+    .live-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--live);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .terminal-body {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1.3fr;
+      gap: 0;
+    }
+    .t-panel {
+      padding: 20px;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .t-panel:last-child { border-right: none; }
+    .t-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .pressure-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 64px;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+    }
+    .pressure-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+    .winprob-bar-wrap {
+      margin-bottom: 8px;
+    }
+    .winprob-bar {
+      display: flex;
+      height: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .winprob-csk { background: #F9CD05; width: 62%; }
+    .winprob-mi  { background: #004BA0; width: 38%; opacity: 0.85; }
+    .winprob-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .agent-entry {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .agent-entry:last-child { border-bottom: none; }
+    .agent-ts {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      padding-top: 1px;
+    }
+    .agent-text {
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(240,240,240,0.88);
+    }
+
+    /* ── BOTTOM CTA ── */
+    .bottom-cta {
+      background: var(--accent);
+      padding: 96px 24px;
+      text-align: center;
+    }
+    .bottom-cta h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .bottom-cta p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+    .bottom-cta .cta-btn {
+      background: #080810;
+      color: var(--accent);
+    }
+    .bottom-cta .cta-btn:hover {
+      background: #0F1117;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+    }
+    .footer-row {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .footer-brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .footer-tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .footer-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--accent); }
+    .footer-disclaimer {
+      max-width: 1100px;
+      margin: 0 auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(102,102,136,0.6);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .terminal-body { grid-template-columns: 1fr; }
+      .t-panel { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .t-panel:last-child { border-bottom: none; }
+      .pressure-number { font-size: 48px; }
+      .footer-row { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">MIQ</a>
+  <a href="https://app.maidaniq.com" class="nav-link mono">app.maidaniq.com →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Cricket Intelligence Terminal</div>
+    <h1 class="hero-headline">The Ground<br>Has A Story.</h1>
+    <p class="hero-sub">MaidanIQ tells it.</p>
+    <p class="hero-body">
+      AI-powered match intelligence for IPL 2026.
+      Pressure Index. Win Probability. Degen Agent.
+      Matchup Oracle. Built for fans who want to
+      understand cricket, not just watch it.
+    </p>
+    <a href="https://app.maidaniq.com" class="cta-btn">
+      OPEN TERMINAL →
+    </a>
+    <p class="cta-note">Free to use · No subscription · IPL 2026</p>
+  </div>
+  <div class="scroll-hint">↓ WHAT'S INSIDE</div>
+</section>
+
+<!-- STATS BAR -->
+<section class="stats-bar">
+  <div class="stats-grid">
+    <div>
+      <div class="stat-number mono" data-target="1193">0</div>
+      <div class="stat-label">IPL Matches</div>
+    </div>
+    <div>
+      <div class="stat-number mono" data-target="283678">0</div>
+      <div class="stat-label">Deliveries</div>
+    </div>
+    <div>
+      <div class="stat-number mono" data-target="15">0</div>
+      <div class="stat-label">Seasons</div>
+    </div>
+    <div>
+      <div class="stat-number mono" data-target="10">0</div>
+      <div class="stat-label">Teams</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="section-header">
+    <h2 class="section-title">Intelligence Layers</h2>
+    <p class="section-sub">Everything the terminal shows you.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">▲</div>
+      <div class="feature-name">Pressure Index</div>
+      <p class="feature-desc">A 0–100 volatility score. When it spikes, something just changed.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◈</div>
+      <div class="feature-name">Win Probability</div>
+      <p class="feature-desc">The price curve of the match. Updated every ball. Read it like a market.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon mono" style="font-size:16px; letter-spacing:-0.05em;">&gt; _</div>
+      <div class="feature-name">Degen Agent</div>
+      <p class="feature-desc">An AI analyst on the trading floor. Sharp. Analytical. Says what others won't.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⊕</div>
+      <div class="feature-name">Matchup Oracle</div>
+      <p class="feature-desc">15 years of ball-by-ball data. How does this batsman perform against this bowler? Now you know.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">◎</div>
+      <div class="feature-name">Venue Intelligence</div>
+      <p class="feature-desc">Every ground has a personality. Wankhede isn't Chepauk. The data knows.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon mono" style="font-size:18px; letter-spacing:0.05em;">≡</div>
+      <div class="feature-name">Match Deep Dive</div>
+      <p class="feature-desc">Batting hierarchy. Bowling heatmap. Fielding intelligence. MVP rankings. Every match, fully dissected.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL PREVIEW -->
+<section class="terminal-section">
+  <div class="section-header" style="margin-bottom:48px;">
+    <h2 class="section-title">The Terminal</h2>
+    <p class="section-sub">This is what it looks like inside.</p>
+  </div>
+
+  <div class="terminal-window">
+    <!-- Top bar -->
+    <div class="terminal-topbar">
+      <div class="terminal-topbar-left mono">
+        MIQ &nbsp;·&nbsp; LIVE &nbsp;·&nbsp; CSK vs MI &nbsp;·&nbsp; 14.3 ov
+      </div>
+      <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span class="live-text">Live</span>
+      </div>
+    </div>
+
+    <!-- Body: three panels -->
+    <div class="terminal-body">
+
+      <!-- Pressure -->
+      <div class="t-panel">
+        <div class="t-label">Pressure Index</div>
+        <div class="pressure-number">74</div>
+        <div class="pressure-sub">Elevated · Batting Side</div>
+      </div>
+
+      <!-- Win probability -->
+      <div class="t-panel">
+        <div class="t-label">Win Probability</div>
+        <div class="winprob-bar-wrap">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-family:'JetBrains Mono',monospace; font-size:11px;">
+            <span style="color:#F9CD05; font-weight:700;">CSK</span>
+            <span style="color:#004BA0; font-weight:700;">MI</span>
+          </div>
+          <div class="winprob-bar">
+            <div class="winprob-csk"></div>
+            <div class="winprob-mi"></div>
+          </div>
+          <div class="winprob-labels">
+            <span style="color:#F9CD05;">62%</span>
+            <span style="color:#5B8FBF;">38%</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <div class="t-label">Model Probability &nbsp;·&nbsp; ball-by-ball</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#666688; margin-top:6px;">
+            Inputs: balls remaining · wickets in hand · RRR · venue baseline · matchup history
+          </div>
+        </div>
+      </div>
+
+      <!-- Degen agent -->
+      <div class="t-panel">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div class="t-label" style="margin-bottom:0;">Degen Agent</div>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span class="live-text" style="font-size:9px;">Streaming</span>
+          </div>
+        </div>
+        <div class="agent-entry">
+          <div class="agent-ts">14.3</div>
+          <div class="agent-text">Bumrah to Dhoni. This isn't a game anymore. It's a hostage situation.</div>
+        </div>
+        <div class="agent-entry">
+          <div class="agent-ts">14.2</div>
+          <div class="agent-text">Yorker, jammed out for one. Pressure Index ticks up six points. The model doesn't blink.</div>
+        </div>
+        <div class="agent-entry">
+          <div class="agent-ts">14.1</div>
+          <div class="agent-text">Slower bouncer. Beats the bat. Crowd notices before the scoreboard does.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <a href="https://app.maidaniq.com" class="cta-btn" style="margin-top:8px;">
+    OPEN TERMINAL →
+  </a>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="bottom-cta">
+  <h2>Ready to read the game?</h2>
+  <p>IPL 2026 · Free access · No subscription</p>
+  <a href="https://app.maidaniq.com" class="cta-btn">OPEN TERMINAL →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-row">
+    <span class="footer-brand">MIQ · maidaniq.com</span>
+    <span class="footer-tagline">Built for cricket fans who think in data.</span>
+    <a href="https://app.maidaniq.com" class="footer-link">app.maidaniq.com →</a>
+  </div>
+  <p class="footer-disclaimer">
+    AI predictions are for entertainment and analytical purposes only.<br>
+    MaidanIQ is not affiliated with BCCI or IPL.
+  </p>
+</footer>
+
+<script>
+  /* ── Count-up animation on scroll ── */
+  function formatNumber(n) {
+    if (n >= 100000) return n.toLocaleString('en-IN');
+    return n.toLocaleString();
+  }
+
+  function animateCount(el, target, duration) {
+    const start = performance.now();
+    const from = 0;
+    requestAnimationFrame(function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const value = Math.round(from + (target - from) * eased);
+      el.textContent = formatNumber(value);
+      if (progress < 1) requestAnimationFrame(tick);
+    });
+  }
+
+  const stats = document.querySelectorAll('[data-target]');
+  let animated = false;
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !animated) {
+      animated = true;
+      stats.forEach((el) => {
+        const target = parseInt(el.dataset.target, 10);
+        animateCount(el, target, 1400);
+      });
+    }
+  }, { threshold: 0.3 });
+
+  if (stats.length) observer.observe(stats[0].closest('section') || stats[0]);
+</script>
+
+</body>
+</html>
