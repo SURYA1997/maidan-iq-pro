@@ -223,10 +223,10 @@ function DeepIntelPanel({ venueName }: { venueName: string }) {
                   </span>
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[12px] font-bold" style={{ color: "var(--accent-primary)" }}>
-                      {t.win_pct.toFixed(0)}%
+                      {t.venue_win_pct.toFixed(0)}%
                     </span>
                     <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>
-                      {t.matches}M
+                      {t.matches_at_venue}M
                     </span>
                   </div>
                 </div>

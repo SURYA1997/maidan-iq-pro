@@ -501,7 +501,14 @@ export interface VenueIntelligence {
     toss_advantage_pct?: number;
     sample_size?: number;
   };
-  home_advantage?: Array<{ team: string; win_pct: number; matches: number }>;
+  home_advantage?: Array<{
+    team: string;
+    full_name: string;
+    venue_win_pct: number;
+    overall_win_pct: number;
+    matches_at_venue: number;
+    wins_at_venue: number;
+  }>;
   venue_kings?: Array<{ player: string; motm_count: number }>;
 }
 
