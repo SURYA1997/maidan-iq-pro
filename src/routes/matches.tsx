@@ -548,8 +548,16 @@ function TeamPersonalitiesSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const ACTIVE = new Set([
+      "Mumbai Indians", "Chennai Super Kings",
+      "Royal Challengers Bengaluru", "Royal Challengers Bangalore",
+      "Kolkata Knight Riders", "Sunrisers Hyderabad",
+      "Delhi Capitals", "Rajasthan Royals",
+      "Punjab Kings", "Kings XI Punjab",
+      "Lucknow Super Giants", "Gujarat Titans",
+    ]);
     getTeamPersonalities()
-      .then((r) => setTeams(r.teams))
+      .then((r) => setTeams(r.teams.filter((t) => ACTIVE.has(t.full_name))))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

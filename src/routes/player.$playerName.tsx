@@ -156,11 +156,6 @@ function ProfileContent({ profile }: { profile: PlayerProfile }) {
             {role.label}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2 mb-1">
-          {[...new Set(profile.teams.map(teamCity))].map((t) => (
-            <span key={t} className="font-mono text-[11px]" style={{ color: "#9CA3AF" }}>{t}</span>
-          ))}
-        </div>
         <div className="flex items-center gap-4 font-mono text-[11px]" style={{ color: "#6B7280" }}>
           <span>{profile.total_matches} matches</span>
           <span>·</span>
