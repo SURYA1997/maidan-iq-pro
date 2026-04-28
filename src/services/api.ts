@@ -494,13 +494,15 @@ export const getAnalyticsOverview = () =>
 /* ─── Venue intelligence ─────────────────────────────────────────────────── */
 
 export interface VenueIntelligence {
-  toss: {
+  toss_intelligence?: {
     bat_first_win_pct: number;
     bowl_first_win_pct: number;
-    best_call: string;
+    best_decision: string;
+    toss_advantage_pct?: number;
+    sample_size?: number;
   };
-  home_teams: Array<{ team: string; win_pct: number; matches: number }>;
-  venue_kings: Array<{ player: string; motm_count: number }>;
+  home_advantage?: Array<{ team: string; win_pct: number; matches: number }>;
+  venue_kings?: Array<{ player: string; motm_count: number }>;
 }
 
 export const getVenueIntelligence = (venueName: string) =>
