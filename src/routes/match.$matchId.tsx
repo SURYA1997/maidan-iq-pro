@@ -9,6 +9,12 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  ReferenceLine,
+  CartesianGrid,
 } from "recharts";
 import { AppLayout } from "@/components/pitchiq/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -19,6 +25,7 @@ import {
   getMatchFielding,
   getMatchImpact,
   getMatchBatting,
+  getMatchTimeline,
   getPlayers,
   type MatchDetail,
   type MatchStory,
@@ -26,6 +33,7 @@ import {
   type MatchFielding,
   type MatchImpact,
   type MatchBatting,
+  type MatchTimeline,
   type BatsmanEntry,
   type BowlerEntry,
   type PlayerSummary,
@@ -305,6 +313,216 @@ function WicketsTimeline({ story, innings, nameLookup }: { story: MatchStory; in
           ))}
         </div>
       )}
+    </SectionCard>
+  );
+}
+
+/* ─── WIN PROBABILITY TIMELINE ──────────────────────────────────────────── */
+
+const tooltipStyle = {
+  background: "#1A1A1A",
+  border: "none",
+  borderLeft: "3px solid var(--accent-primary)",
+  borderRadius: 0,
+  fontFamily: "var(--font-mono)",
+  fontSize: 11,
+  padding: "6px 10px",
+  boxShadow: "none",
+};
+
+function WinProbabilityTimeline({
+  data,
+  innings,
+  match,
+}: {
+  data: MatchTimeline;
+  innings: 1 | 2;
+  match: MatchDetail;
+}) {
+  const inn1 = data.innings_1;
+  const inn2 = data.innings_2;
+
+  /* ── 1st innings projected score chart ─────────────────────── */
+
+  const chartData1 = inn1.overs.map((o) => ({
+    over: o.over,
+    projected: o.projected_score,
+    actual: parseInt(o.score),
+    runs: o.runs_this_over,
+    wickets: o.wickets_this_over,
+    score: o.score,
+  }));
+
+  const peakOver = inn1.overs.reduce(
+    (max, o) => (o.runs_this_over > max.runs_this_over ? o : max),
+    inn1.overs[0],
+  );
+
+  /* ── 2nd innings win probability chart ─────────────────────── */
+
+  const chaseName = city(inn2.team);
+  const defendName = city(
+    match.team1 === inn2.team ? match.team2 : match.team1,
+  );
+  const chaseColor = accent(inn2.team);
+  const defendColor = accent(
+    match.team1 === inn2.team ? match.team2 : match.team1,
+  );
+
+  const chartData2 = inn2.overs.map((o) => ({
+    over: o.over,
+    chase: Math.round(o.win_probability * 100),
+    defend: Math.round((1 - o.win_probability) * 100),
+    hasWicket: o.wickets_this_over > 0,
+    score: o.score,
+    runsNeeded: o.runs_needed,
+    ballsLeft: o.balls_remaining,
+  }));
+
+  /* Custom dot for wicket overs on win probability chart */
+  const WicketDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    if (!payload?.hasWicket) return null;
+    return <circle cx={cx} cy={cy} r={5} fill="#EF4444" stroke="none" />;
+  };
+
+  const keyMoments = (inn2.key_moments ?? [])
+    .sort((a, b) => Math.abs(b.probability_swing) - Math.abs(a.probability_swing))
+    .slice(0, 3);
+
+  return (
+    <SectionCard
+      title="MATCH TIMELINE"
+      subtitle="// win probability & momentum"
+    >
+      <div className="p-5">
+        {innings === 1 ? (
+          <>
+            {/* 1st innings: projected score */}
+            <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
+              {inn1.team} — PROJECTED SCORE PER OVER
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData1} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="2 4" vertical={false} />
+                  <XAxis dataKey="over" tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} width={36} />
+                  <ReferenceLine y={inn1.par_score} stroke="rgba(255,255,255,0.3)" strokeDasharray="4 3" label={{ value: `PAR: ${inn1.par_score}`, fill: "#9CA3AF", fontSize: 9, fontFamily: "var(--font-mono)", position: "right" }} />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelStyle={{ color: "#6B7280", fontSize: 10 }}
+                    itemStyle={{ color: "#F0F0F0" }}
+                    formatter={(v: any, _: any, props: any) => [
+                      `${props.payload.score} — Proj: ${v}`,
+                      `Over ${props.payload.over}`,
+                    ]}
+                    labelFormatter={(l) => `Over ${l}`}
+                    cursor={{ stroke: "rgba(255,107,0,0.3)", strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="projected"
+                    stroke="#FF6B00"
+                    strokeWidth={2}
+                    fill="#FF6B00"
+                    fillOpacity={0.15}
+                    dot={false}
+                    activeDot={{ r: 3, fill: "#FF6B00", stroke: "none" }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Peak over badge */}
+            {peakOver && (
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5" style={{ background: "rgba(255,107,0,0.1)", border: "1px solid rgba(255,107,0,0.3)" }}>
+                <span className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: "#6B7280" }}>PEAK OVER</span>
+                <span className="font-mono text-[13px] font-black" style={{ color: "var(--accent-primary)" }}>
+                  {peakOver.over} ({peakOver.runs_this_over} runs)
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* 2nd innings: win probability */}
+            <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>
+              WIN PROBABILITY — {chaseName} chasing {inn2.target}
+            </div>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData2} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="2 4" vertical={false} />
+                  <XAxis dataKey="over" tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fill: "#6B7280", fontSize: 10, fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false} width={36} tickFormatter={(v) => `${v}%`} />
+                  <ReferenceLine y={50} stroke="rgba(255,255,255,0.2)" strokeDasharray="4 3" />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelStyle={{ color: "#6B7280", fontSize: 10 }}
+                    formatter={(v: any, name: any, props: any) => {
+                      const p = props.payload;
+                      const teamName = String(name) === "chase" ? chaseName : defendName;
+                      return `${teamName}: ${v}%  Need ${p?.runsNeeded}r off ${p?.ballsLeft}b`;
+                    }}
+                    labelFormatter={(l) => `Over ${l}`}
+                    cursor={{ stroke: "rgba(255,107,0,0.3)", strokeWidth: 1 }}
+                  />
+                  <Line type="monotone" dataKey="chase" stroke={chaseColor} strokeWidth={2} dot={<WicketDot />} activeDot={{ r: 3, fill: chaseColor, stroke: "none" }} name="chase" />
+                  <Line type="monotone" dataKey="defend" stroke={defendColor} strokeWidth={1.5} strokeOpacity={0.7} dot={false} activeDot={{ r: 3, fill: defendColor, stroke: "none" }} name="defend" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Legend */}
+            <div className="mt-2 flex items-center gap-4 font-mono text-[10px]" style={{ color: "#6B7280" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ display: "inline-block", width: 16, height: 2, background: chaseColor, verticalAlign: "middle" }} />
+                {chaseName} (chasing)
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ display: "inline-block", width: 16, height: 2, background: defendColor, opacity: 0.7, verticalAlign: "middle" }} />
+                {defendName} (defending)
+              </span>
+              {chartData2.some((d) => d.hasWicket) && (
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#EF4444", verticalAlign: "middle" }} />
+                  Wicket
+                </span>
+              )}
+            </div>
+
+            {/* Key moments */}
+            {keyMoments.length > 0 && (
+              <div className="mt-4">
+                <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.12em]" style={{ color: "#6B7280" }}>KEY MOMENTS</div>
+                <div className="space-y-0">
+                  {keyMoments.map((km, i) => {
+                    const swing = km.probability_swing;
+                    const pct = Math.abs(Math.round(swing * 100));
+                    const up = swing > 0;
+                    return (
+                      <div
+                        key={i}
+                        className="grid grid-cols-[48px_1fr_auto] gap-3 py-2.5"
+                        style={{ borderBottom: i < keyMoments.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}
+                      >
+                        <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: "var(--accent-primary)" }}>
+                          {km.over}.0
+                        </span>
+                        <span className="font-mono text-[12px] leading-relaxed" style={{ color: "#F0F0F0", opacity: 0.9 }}>
+                          {km.description}
+                        </span>
+                        <span className="font-mono text-[12px] font-bold whitespace-nowrap" style={{ color: up ? "#4CAF50" : "#EF4444" }}>
+                          {up ? "↑" : "↓"}{pct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </SectionCard>
   );
 }
@@ -749,6 +967,7 @@ function MatchDeepDivePage() {
 
   const [match, setMatch] = useState<MatchDetail | null>(null);
   const [story, setStory] = useState<MatchStory | null>(null);
+  const [timeline, setTimeline] = useState<MatchTimeline | null>(null);
   const [batting, setBatting] = useState<MatchBatting | null>(null);
   const [bowling, setBowling] = useState<MatchBowling | null>(null);
   const [fielding, setFielding] = useState<MatchFielding | null>(null);
@@ -763,15 +982,17 @@ function MatchDeepDivePage() {
     Promise.all([
       getMatchDetail(matchId),
       getMatchStory(matchId),
+      getMatchTimeline(matchId),
       getMatchBatting(matchId),
       getMatchBowling(matchId),
       getMatchFielding(matchId),
       getMatchImpact(matchId),
       getPlayers(),
     ])
-      .then(([m, s, bat, b, f, imp, p]) => {
+      .then(([m, s, tl, bat, b, f, imp, p]) => {
         setMatch(m);
         setStory(s);
+        setTimeline(tl);
         setBatting(bat);
         setBowling(b);
         setFielding(f);
@@ -828,6 +1049,15 @@ function MatchDeepDivePage() {
 
               <div className="mb-4">
                 <PartnershipMap story={story} innings={innings} nameLookup={nameLookup} teamColor={inningsTeamColor} />
+              </div>
+
+              {/* Win probability timeline */}
+              <div className="mb-4">
+                {timeline && match ? (
+                  <WinProbabilityTimeline data={timeline} innings={innings} match={match} />
+                ) : (
+                  <Skeleton h="h-72" />
+                )}
               </div>
 
               {/* Batting intelligence */}

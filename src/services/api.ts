@@ -405,6 +405,62 @@ export interface MatchBatting {
 export const getMatchBatting = (matchId: string) =>
   get<MatchBatting>(`/matches/${matchId}/batting`);
 
+/* ─── Match timeline ─────────────────────────────────────────────────────── */
+
+export interface TimelineOver1 {
+  over: number;
+  innings: 1;
+  score: string;
+  runs_this_over: number;
+  wickets_this_over: number;
+  projected_score: number;
+  par_score: number;
+  scoring_rate: number;
+}
+
+export interface TimelineOver2 {
+  over: number;
+  innings: 2;
+  score: string;
+  runs_this_over: number;
+  wickets_this_over: number;
+  win_probability: number;
+  runs_needed: number;
+  balls_remaining: number;
+  wickets_remaining: number;
+  required_rr: number;
+}
+
+export interface KeyMoment {
+  over: number;
+  description: string;
+  probability_swing: number;
+}
+
+export interface MatchTimeline {
+  match_id: string;
+  innings_1: {
+    team: string;
+    final_score: string;
+    target_set: number;
+    par_score: number;
+    overs: TimelineOver1[];
+  };
+  innings_2: {
+    team: string;
+    target: number;
+    result: string;
+    final_score: string;
+    overs: TimelineOver2[];
+    key_moments: KeyMoment[];
+    win_probability_start: number;
+    win_probability_end: number;
+  };
+}
+
+export const getMatchTimeline = (matchId: string) =>
+  get<MatchTimeline>(`/matches/${matchId}/timeline`);
+
 /* ─── Points table ──────────────────────────────────────────────────────── */
 
 export interface PointsTableEntry {
