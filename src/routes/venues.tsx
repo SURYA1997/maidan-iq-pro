@@ -1,5 +1,5 @@
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/pitchiq/AppLayout";
 import { MetricTooltip } from "@/components/pitchiq/InfoTip";
@@ -244,9 +244,14 @@ function DeepIntelPanel({ venueName }: { venueName: string }) {
             {intel.venue_kings?.length ? (
               intel.venue_kings.slice(0, 5).map((k) => (
                 <div key={k.player} className="flex items-center justify-between py-1.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <span className="font-mono text-[12px]" style={{ color: "#F0F0F0" }}>
+                  <Link
+                    to="/player/$playerName"
+                    params={{ playerName: encodeURIComponent(k.player) }}
+                    className="font-mono text-[12px] transition-opacity hover:opacity-70"
+                    style={{ color: "#F0F0F0" }}
+                  >
                     {k.player}
-                  </span>
+                  </Link>
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono text-[13px] font-bold" style={{ color: "var(--accent-primary)" }}>
                       {k.motm_count}

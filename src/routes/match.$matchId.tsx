@@ -71,6 +71,20 @@ const TEAM_ACCENT: Record<string, string> = {
 function city(t: string) { return CITY[t] ?? t; }
 function accent(t: string) { return TEAM_ACCENT[t] ?? "#FF6B00"; }
 
+function PlayerLink({ name, style }: { name: string; style?: React.CSSProperties }) {
+  if (!name || name.length <= 8) return <span style={style}>{name}</span>;
+  return (
+    <Link
+      to="/player/$playerName"
+      params={{ playerName: encodeURIComponent(name) }}
+      className="transition-opacity hover:opacity-70"
+      style={style}
+    >
+      {name}
+    </Link>
+  );
+}
+
 function winResult(m: MatchDetail): string {
   if (m.win_by_wickets) return `${city(m.winner)} won by ${m.win_by_wickets} wicket${m.win_by_wickets === 1 ? "" : "s"}`;
   if (m.win_by_runs) return `${city(m.winner)} won by ${m.win_by_runs} run${m.win_by_runs === 1 ? "" : "s"}`;
@@ -183,8 +197,8 @@ function OverTimeline({ story, innings, nameLookup }: { story: MatchStory; innin
                 <td className="px-3 py-2 font-bold" style={{ color: "#F0F0F0" }}>{o.runs_that_over}</td>
                 <td className="px-3 py-2 font-bold" style={{ color: o.wickets_that_over > 0 ? "#EF4444" : "#6B7280" }}>{o.wickets_that_over > 0 ? o.wickets_that_over : "—"}</td>
                 <td className="px-3 py-2 font-bold" style={{ color: "#F0F0F0" }}>{o.cumulative_score}/{o.cumulative_wickets}</td>
-                <td className="px-3 py-2" style={{ color: "#9CA3AF" }}>{name(o.key_batter)}</td>
-                <td className="px-3 py-2" style={{ color: "#9CA3AF" }}>{name(o.key_bowler)}</td>
+                <td className="px-3 py-2"><PlayerLink name={name(o.key_batter)} style={{ color: "#9CA3AF" }} /></td>
+                <td className="px-3 py-2"><PlayerLink name={name(o.key_bowler)} style={{ color: "#9CA3AF" }} /></td>
               </tr>
             ))}
           </tbody>
@@ -280,7 +294,7 @@ function WicketsTimeline({ story, innings, nameLookup }: { story: MatchStory; in
             <div key={i} className="flex items-center gap-4 py-2" style={{ borderBottom: i < wickets.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
               <div className="flex h-6 w-6 shrink-0 items-center justify-center font-mono text-[10px] font-bold" style={{ background: "rgba(239,68,68,0.15)", color: "#EF4444" }}>{i + 1}</div>
               <div className="flex-1">
-                <span className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>{name(w.wicket_player_out)}</span>
+                <PlayerLink name={name(w.wicket_player_out)} style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: "bold", color: "#F0F0F0" }} />
                 <span className="ml-2 font-mono text-[11px] capitalize" style={{ color: "#9CA3AF" }}>{w.wicket_kind}</span>
               </div>
               <div className="text-right">
@@ -387,9 +401,7 @@ function BattingIntelligence({ data, innings }: { data: MatchBatting; innings: 1
                   </span>
                   {/* Center */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-mono text-[13px] font-bold" style={{ color: accent(inn.team) }}>
-                      {b.name}
-                    </div>
+                    <PlayerLink name={b.name} style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: "bold", color: accent(inn.team) }} />
                     <div className="mt-0.5 font-mono text-[11px] tabular-nums" style={{ color: "#9CA3AF" }}>
                       {b.stats.runs}r ({b.stats.balls}b) &nbsp;SR: {b.stats.strike_rate.toFixed(1)}
                     </div>
@@ -518,7 +530,7 @@ function BowlingIntelligence({ data, innings }: { data: MatchBowling; innings: 1
                 <div className="min-w-0 flex-1">
                   {/* Name + impact */}
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-mono text-[13px] font-bold truncate" style={{ color: "#F0F0F0" }}>{b.name}</span>
+                    <PlayerLink name={b.name} style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: "bold", color: "#F0F0F0" }} />
                     <div className="shrink-0 text-right">
                       <div className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: "#6B7280" }}>IMPACT</div>
                       <div className="font-mono text-[15px] font-black" style={{ color: "var(--accent-primary)" }}>{b.impact_score.toFixed(0)}</div>
@@ -642,7 +654,7 @@ function FieldingIntelligence({ data }: { data: MatchFielding }) {
                 <div key={h.name} className="flex items-center gap-3 py-2" style={{ borderBottom: i < data.fielding_heroes.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                   <span className="w-4 shrink-0 font-mono text-[11px] font-bold" style={{ color: "rgba(255,255,255,0.2)" }}>{i + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-mono text-[12px] font-bold truncate" style={{ color: accent(h.team) || "#F0F0F0" }}>{h.name}</div>
+                    <PlayerLink name={h.name} style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: "bold", color: accent(h.team) || "#F0F0F0" }} />
                     <div className="font-mono text-[10px]" style={{ color: "#6B7280" }}>
                       C:{h.catches} RO:{h.run_outs} St:{h.stumpings}{h.caught_and_bowled > 0 ? ` C&B:${h.caught_and_bowled}` : ""}
                     </div>
@@ -708,7 +720,7 @@ function MatchMVP({ data, match }: { data: MatchImpact; match: MatchDetail }) {
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-[13px] font-bold" style={{ color: accent(p.team) }}>{p.name}</span>
+                  <PlayerLink name={p.name} style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: "bold", color: accent(p.team) }} />
                   <span className="px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase" style={{ background: `${role.color}20`, color: role.color }}>
                     {role.label}
                   </span>

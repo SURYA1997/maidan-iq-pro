@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PlayerPlayerNameRouteImport } from './routes/player.$playerName'
 import { Route as VenuesRouteImport } from './routes/venues'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as StoryRouteImport } from './routes/story'
@@ -23,6 +24,11 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as FantasyRouteImport } from './routes/fantasy'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PlayerPlayerNameRoute = PlayerPlayerNameRouteImport.update({
+  id: '/player/$playerName',
+  path: '/player/$playerName',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VenuesRoute = VenuesRouteImport.update({
   id: '/venues',
   path: '/venues',
@@ -90,6 +96,7 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/player/$playerName': typeof PlayerPlayerNameRoute
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/venues': typeof VenuesRoute
 }
 export interface FileRoutesByTo {
+  '/player/$playerName': typeof PlayerPlayerNameRoute
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/player/$playerName': typeof PlayerPlayerNameRoute
   '/': typeof IndexRoute
   '/fantasy': typeof FantasyRoute
   '/guide': typeof GuideRoute
@@ -138,6 +147,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/player/$playerName'
     | '/'
     | '/fantasy'
     | '/guide'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/venues'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/player/$playerName'
     | '/'
     | '/fantasy'
     | '/guide'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/venues'
   id:
     | '__root__'
+    | '/player/$playerName'
     | '/'
     | '/fantasy'
     | '/guide'
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  PlayerPlayerNameRoute: typeof PlayerPlayerNameRoute
   IndexRoute: typeof IndexRoute
   FantasyRoute: typeof FantasyRoute
   GuideRoute: typeof GuideRoute
@@ -201,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/player/$playerName': {
+      id: '/player/$playerName'
+      path: '/player/$playerName'
+      fullPath: '/player/$playerName'
+      preLoaderRoute: typeof PlayerPlayerNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/venues': {
       id: '/venues'
       path: '/venues'
@@ -296,6 +316,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  PlayerPlayerNameRoute: PlayerPlayerNameRoute,
   IndexRoute: IndexRoute,
   FantasyRoute: FantasyRoute,
   GuideRoute: GuideRoute,

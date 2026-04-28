@@ -526,3 +526,76 @@ export interface LiveMatchResponse extends MatchSummary {
 
 export const getLiveCurrentMatch = () =>
   get<LiveMatchResponse>("/matches/live/current");
+
+/* ─── Player profile ─────────────────────────────────────────────────────── */
+
+export interface PlayerSearchResult {
+  registry_id: string;
+  name: string;
+  matches: number;
+  batting_runs: number;
+  bowling_wickets: number;
+}
+
+export interface PlayerCareerBatting {
+  total_runs: number; total_balls: number; career_strike_rate: number;
+  career_average: number | null; total_fours: number; total_sixes: number;
+  highest_score: number; fifties: number; hundreds: number;
+  dot_ball_pct: number; innings_batted: number; dismissals: number;
+}
+
+export interface PlayerCareerBowling {
+  total_wickets: number; total_overs: number; career_economy: number;
+  career_average: number | null; career_strike_rate: number | null;
+  best_figures: string | null; four_wicket_hauls: number;
+  five_wicket_hauls: number; dot_ball_pct: number; innings_bowled: number;
+}
+
+export interface PlayerSeasonStats {
+  season: string; matches: number;
+  batting: { runs: number; balls: number; strike_rate: number; average: number | null; fours: number; sixes: number };
+  bowling: { wickets: number; overs: number; economy: number; average: number | null };
+}
+
+export interface PlayerPhaseEntry {
+  batting: { runs: number; balls: number; strike_rate: number };
+  bowling: { wickets: number; overs: number; economy: number };
+}
+
+export interface PlayerRecentMatch {
+  match_id: string; date: string; venue: string;
+  batting: { runs: number; balls: number; strike_rate: number } | null;
+  bowling: { wickets: number; overs: number; economy: number } | null;
+}
+
+export interface PlayerH2HEntry {
+  bowler?: string; batsman?: string;
+  balls_faced?: number; balls_bowled?: number;
+  runs: number; runs_conceded?: number;
+  dismissals: number; strike_rate?: number; economy?: number;
+}
+
+export interface PlayerVenueStat {
+  venue: string; matches: number;
+  batting: { runs: number; balls: number; strike_rate: number };
+  bowling: { wickets: number; overs: number; economy: number };
+}
+
+export interface PlayerProfile {
+  registry_id: string; full_name: string;
+  primary_role: "Batsman" | "Bowler" | "All-Rounder";
+  teams: string[]; seasons_played: string[];
+  total_matches: number; total_motm: number;
+  batting: PlayerCareerBatting; bowling: PlayerCareerBowling;
+  season_stats: PlayerSeasonStats[];
+  phase_stats: Record<string, PlayerPhaseEntry>;
+  venue_stats: PlayerVenueStat[];
+  recent_form: PlayerRecentMatch[];
+  head_to_head: PlayerH2HEntry[];
+}
+
+export const searchPlayers = (q: string) =>
+  get<PlayerSearchResult[]>(`/players/search?q=${encodeURIComponent(q)}`);
+
+export const getPlayerProfile = (playerName: string) =>
+  get<PlayerProfile>(`/players/${encodeURIComponent(playerName)}/profile`);
