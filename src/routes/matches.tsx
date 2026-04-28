@@ -620,9 +620,14 @@ function MOTMRow({ entry, rank }: { entry: MOTMEntry; rank: number }) {
       <span className="w-6 font-mono text-[16px] font-black shrink-0 tabular-nums" style={{ color: "rgba(255,255,255,0.15)" }}>
         {rank}
       </span>
-      <span className="flex-1 font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+      <Link
+        to="/player/$playerName"
+        params={{ playerName: encodeURIComponent(entry.player) }}
+        className="flex-1 font-mono text-[13px] font-bold transition-opacity hover:opacity-70"
+        style={{ color: "#F0F0F0" }}
+      >
         {entry.player}
-      </span>
+      </Link>
       <div className="flex items-center gap-1.5 shrink-0">
         <span className="font-mono text-[18px] font-black tabular-nums" style={{ color: "var(--accent-primary)" }}>
           {entry.motm_count}
