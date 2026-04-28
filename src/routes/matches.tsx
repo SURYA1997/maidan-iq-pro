@@ -6,9 +6,15 @@ import {
   getLiveCurrentMatch,
   getMatches,
   getPointsTable,
+  getTeamPersonalities,
+  getMOTM,
+  getAnalyticsOverview,
   type LiveMatchResponse,
   type MatchSummary,
   type PointsTableEntry,
+  type TeamPersonality,
+  type MOTMEntry,
+  type AnalyticsOverview,
 } from "@/services/api";
 
 export const Route = createFileRoute("/matches")({
@@ -441,6 +447,250 @@ function PointsTableSection() {
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
+/* ─── Section 5: Analytics Overview (Season Pulse) ─────────────────────── */
+
+function SeasonPulseSection() {
+  const [data, setData] = useState<AnalyticsOverview | null>(null);
+
+  useEffect(() => {
+    getAnalyticsOverview().then(setData).catch(() => {});
+  }, []);
+
+  const s = data?.season_2026;
+  const ff = data?.fun_facts;
+
+  const stats = s
+    ? [
+        { label: "MATCHES", value: s.total_matches.toLocaleString() },
+        { label: "RUNS", value: s.total_runs.toLocaleString() },
+        { label: "WICKETS", value: s.total_wickets.toLocaleString() },
+        { label: "SIXES", value: s.total_sixes.toLocaleString() },
+        { label: "HIGHEST SCORE", value: String(s.highest_team_score.score) },
+        { label: "FOURS", value: s.total_fours.toLocaleString() },
+      ]
+    : [];
+
+  return (
+    <section className="mb-6">
+      <SectionHeader title="IPL 2026" subtitle="// SEASON PULSE" />
+
+      {/* Stats bar */}
+      <div
+        className="mb-3 overflow-x-auto rounded-none"
+        style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}
+      >
+        <div className="flex min-w-max gap-0">
+          {!data
+            ? [...Array(6)].map((_, i) => (
+                <div key={i} className="flex flex-col items-center px-6 py-4" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="h-7 w-16 animate-pulse rounded-none bg-white/10 mb-2" />
+                  <div className="h-3 w-14 animate-pulse rounded-none bg-white/5" />
+                </div>
+              ))
+            : stats.map((st, i) => (
+                <div key={st.label} className="flex flex-col items-center px-6 py-4" style={{ borderRight: i < stats.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                  <div className="font-mono text-[22px] font-black tabular-nums" style={{ color: "var(--accent-primary)" }}>
+                    {st.value}
+                  </div>
+                  <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>
+                    {st.label}
+                  </div>
+                </div>
+              ))}
+        </div>
+      </div>
+
+      {/* Fun fact cards */}
+      {ff && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-none p-4" style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}>
+            <div className="label-mono mb-2" style={{ color: "var(--accent-primary)", fontSize: 9, letterSpacing: "0.14em" }}>CLOSEST FINISH</div>
+            <div className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+              {ff.closest_match.winner} won by {ff.closest_match.margin} run
+            </div>
+            <div className="mt-0.5 font-mono text-[10px]" style={{ color: "#6B7280" }}>{ff.closest_match.match}</div>
+          </div>
+          <div className="rounded-none p-4" style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}>
+            <div className="label-mono mb-2" style={{ color: "var(--accent-primary)", fontSize: 9, letterSpacing: "0.14em" }}>BIGGEST WIN</div>
+            <div className="font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+              {ff.biggest_win.winner} won by {ff.biggest_win.margin} runs
+            </div>
+            <div className="mt-0.5 font-mono text-[10px]" style={{ color: "#6B7280" }}>{ff.biggest_win.match}</div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ─── Section 6: Team Personalities ─────────────────────────────────────── */
+
+const PERSONALITY_STYLE: Record<string, { bg: string; text: string }> = {
+  Dominant:         { bg: "var(--accent-primary)", text: "#000" },
+  "Chase Masters":  { bg: "#2196F3",               text: "#fff" },
+  "Powerplay Kings":{ bg: "#4CAF50",               text: "#fff" },
+  Clinical:         { bg: "#607D8B",               text: "#fff" },
+  Scrappy:          { bg: "#455A64",               text: "#fff" },
+};
+
+function personalityStyle(p: string) {
+  return PERSONALITY_STYLE[p] ?? { bg: "#374151", text: "#9CA3AF" };
+}
+
+function preferredMethodLabel(m: TeamPersonality["preferred_method"]): string {
+  if (m === "batting_first") return "Prefers batting first";
+  if (m === "chasing")       return "Prefers chasing";
+  return "Balanced approach";
+}
+
+function TeamPersonalitiesSection() {
+  const [teams, setTeams] = useState<TeamPersonality[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTeamPersonalities()
+      .then((r) => setTeams(r.teams))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <section className="mb-6">
+      <SectionHeader title="TEAM PERSONALITIES" subtitle="// how each team wins" />
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-28 animate-pulse rounded-none" style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {teams.map((t) => {
+            const ps = personalityStyle(t.personality);
+            return (
+              <div
+                key={t.team}
+                className="rounded-none p-4"
+                style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)", borderLeft: `2px solid ${accent(t.full_name)}` }}
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="font-mono text-[15px] font-black" style={{ color: accent(t.full_name) }}>
+                      {t.team}
+                    </div>
+                    <span
+                      className="mt-1 inline-block font-mono text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-0.5"
+                      style={{ background: ps.bg, color: ps.text }}
+                    >
+                      {t.personality}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-[22px] font-black" style={{ color: "var(--accent-primary)" }}>
+                      {t.win_pct.toFixed(0)}%
+                    </div>
+                    <div className="font-mono text-[9px]" style={{ color: "#6B7280" }}>WIN RATE</div>
+                  </div>
+                </div>
+                <div className="flex gap-4 font-mono text-[11px] mb-2">
+                  <span style={{ color: "#9CA3AF" }}>BAT FIRST <span style={{ color: "#F0F0F0", fontWeight: 700 }}>{t.wins_batting_first}W</span></span>
+                  <span style={{ color: "#9CA3AF" }}>CHASE <span style={{ color: "#F0F0F0", fontWeight: 700 }}>{t.wins_chasing}W</span></span>
+                </div>
+                <div className="font-mono text-[10px]" style={{ color: "#6B7280" }}>
+                  → {preferredMethodLabel(t.preferred_method)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ─── Section 7: MOTM Leaderboard ───────────────────────────────────────── */
+
+function MOTMRow({ entry, rank }: { entry: MOTMEntry; rank: number }) {
+  return (
+    <div
+      className="flex items-center gap-3 py-2.5 px-4"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+    >
+      <span className="w-6 font-mono text-[16px] font-black shrink-0 tabular-nums" style={{ color: "rgba(255,255,255,0.15)" }}>
+        {rank}
+      </span>
+      <span className="flex-1 font-mono text-[13px] font-bold" style={{ color: "#F0F0F0" }}>
+        {entry.player}
+      </span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="font-mono text-[18px] font-black tabular-nums" style={{ color: "var(--accent-primary)" }}>
+          {entry.motm_count}
+        </span>
+        <span style={{ fontSize: 14 }}>🏆</span>
+      </div>
+    </div>
+  );
+}
+
+function MOTMLeaderboardSection() {
+  const [data, setData] = useState<{ current: MOTMEntry[]; allTime: MOTMEntry[] } | null>(null);
+  const [allTimeOpen, setAllTimeOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMOTM()
+      .then((r) => setData({ current: r.current_season.slice(0, 10), allTime: r.all_time.slice(0, 20) }))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <section className="mb-6">
+      <SectionHeader title="MATCH WINNERS" subtitle="// IPL 2026 player of the match" />
+
+      <div className="rounded-none" style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)", borderLeft: "2px solid var(--accent-primary)" }}>
+        <div className="px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#6B7280" }}>
+          2026 SEASON
+        </div>
+
+        {loading ? (
+          <div className="space-y-px p-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-10 animate-pulse rounded-none bg-white/[0.02]" />
+            ))}
+          </div>
+        ) : !data?.current.length ? (
+          <div className="px-4 py-6 font-mono text-[11px]" style={{ color: "#6B7280" }}>NO DATA YET</div>
+        ) : (
+          data.current.map((e, i) => <MOTMRow key={e.player} entry={e} rank={i + 1} />)
+        )}
+
+        {/* All-time accordion */}
+        {data && data.allTime.length > 0 && (
+          <>
+            <button
+              onClick={() => setAllTimeOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-white/[0.02]"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>
+                ALL TIME LEADERS
+              </span>
+              <span className="font-mono text-[12px]" style={{ color: "#6B7280" }}>
+                {allTimeOpen ? "▲" : "▼"}
+              </span>
+            </button>
+            {allTimeOpen && data.allTime.map((e, i) => <MOTMRow key={e.player} entry={e} rank={i + 1} />)}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 function MatchesPage() {
   const [matches, setMatches] = useState<MatchSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -457,9 +707,11 @@ function MatchesPage() {
       <AppLayout pageName="MATCHES">
         <div className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-20 lg:pb-6">
 
-          <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+          {/* Season Pulse — full width at top */}
+          <SeasonPulseSection />
 
-            {/* Main column */}
+          {/* 2-column: left (live + recent) right (standings) */}
+          <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
             <div>
               <LiveNowSection />
               {!loading && matches.length > 0 && (
@@ -470,24 +722,23 @@ function MatchesPage() {
                   <SectionHeader title="RECENT RESULTS" subtitle="IPL 2026" />
                   <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-14 animate-pulse rounded-none"
-                        style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }}
-                      />
+                      <div key={i} className="h-14 animate-pulse rounded-none"
+                        style={{ background: "#0F1117", border: "1px solid rgba(255,255,255,0.08)" }} />
                     ))}
                   </div>
                 </section>
               )}
             </div>
-
-            {/* Side column */}
             <div>
               <PointsTableSection />
             </div>
           </div>
 
-          {/* Full-width matches table below */}
+          {/* Full-width: Team Personalities + MOTM */}
+          <TeamPersonalitiesSection />
+          <MOTMLeaderboardSection />
+
+          {/* Full-width: all matches */}
           {!loading && matches.length > 0 && (
             <AllMatchesSection matches={matches} />
           )}

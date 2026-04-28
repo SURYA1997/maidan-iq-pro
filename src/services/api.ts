@@ -429,6 +429,83 @@ export interface PointsTableResponse {
 export const getPointsTable = () =>
   get<PointsTableResponse>("/points-table");
 
+/* ─── Team personalities ─────────────────────────────────────────────────── */
+
+export interface TeamPersonality {
+  team: string;
+  full_name: string;
+  personality: string;
+  total_matches: number;
+  total_wins: number;
+  win_pct: number;
+  wins_batting_first: number;
+  wins_chasing: number;
+  preferred_method: "batting_first" | "chasing" | "balanced";
+  avg_win_by_runs: number;
+  avg_win_by_wickets: number;
+  preferred_toss_decision: string;
+}
+
+export interface TeamPersonalitiesResponse {
+  teams: TeamPersonality[];
+}
+
+export const getTeamPersonalities = () =>
+  get<TeamPersonalitiesResponse>("/teams/personalities");
+
+/* ─── MOTM leaderboard ───────────────────────────────────────────────────── */
+
+export interface MOTMEntry {
+  player: string;
+  motm_count: number;
+}
+
+export interface MOTMResponse {
+  all_time: MOTMEntry[];
+  current_season: MOTMEntry[];
+}
+
+export const getMOTM = () => get<MOTMResponse>("/players/motm");
+
+/* ─── Analytics overview ─────────────────────────────────────────────────── */
+
+export interface AnalyticsOverview {
+  season_2026: {
+    total_matches: number;
+    total_runs: number;
+    total_wickets: number;
+    total_sixes: number;
+    total_fours: number;
+    highest_team_score: { score: number; match: string; innings?: number };
+    lowest_team_score: { score: number; match: string };
+    most_sixes_in_match: { sixes: number; match: string };
+  };
+  fun_facts: {
+    closest_match: { margin: number; winner: string; match: string };
+    biggest_win: { margin: number; winner: string; match: string };
+    highest_individual_score: { player: string; runs: number; balls: number; match: string };
+    most_economical_spell: { player: string; runs: number };
+  };
+}
+
+export const getAnalyticsOverview = () =>
+  get<AnalyticsOverview>("/analytics/overview");
+
+/* ─── Venue intelligence ─────────────────────────────────────────────────── */
+
+export interface VenueIntelligence {
+  toss: {
+    bat_first_win_pct: number;
+    bowl_first_win_pct: number;
+    best_call: string;
+  };
+  home_teams: Array<{ team: string; win_pct: number; matches: number }>;
+  venue_kings: Array<{ player: string; motm_count: number }>;
+}
+
+export const getVenueIntelligence = (venueName: string) =>
+  get<VenueIntelligence>(`/venues/${encodeURIComponent(venueName)}/intelligence`);
+
 /* ─── Live match ─────────────────────────────────────────────────────────── */
 
 export interface LiveMatchResponse extends MatchSummary {

@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/pitchiq/AppLayout";
 import { MetricTooltip } from "@/components/pitchiq/InfoTip";
-import { getVenues, getVenue, type VenueSummary, type VenueDetail } from "@/services/api";
+import { getVenues, getVenue, getVenueIntelligence, type VenueSummary, type VenueDetail, type VenueIntelligence } from "@/services/api";
 
 export const Route = createFileRoute("/venues")({
   component: VenuesPage,
@@ -81,13 +81,105 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 /* ─── Venue detail panel ────────────────────────────────────────────────── */
 
+function DeepIntelPanel({ venueName }: { venueName: string }) {
+  const [intel, setIntel] = useState<VenueIntelligence | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [unavailable, setUnavailable] = useState(false);
+
+  useEffect(() => {
+    setIntel(null);
+    setLoading(true);
+    setUnavailable(false);
+    getVenueIntelligence(venueName)
+      .then(setIntel)
+      .catch(() => setUnavailable(true))
+      .finally(() => setLoading(false));
+  }, [venueName]);
+
+  if (loading) {
+    return (
+      <div className="space-y-2 px-4 py-4">
+        {[...Array(3)].map((_, i) => <div key={i} className="h-4 animate-pulse rounded-none bg-white/5" />)}
+      </div>
+    );
+  }
+
+  if (unavailable || !intel) {
+    return (
+      <div className="px-4 py-4 font-mono text-[11px]" style={{ color: "#6B7280" }}>
+        DEEP INTELLIGENCE NOT YET AVAILABLE FOR THIS VENUE
+      </div>
+    );
+  }
+
+  const batFirst = intel.toss.bat_first_win_pct;
+  const bowlFirst = intel.toss.bowl_first_win_pct;
+  const bestCall = bowlFirst > batFirst ? "BOWL FIRST" : "BAT FIRST";
+
+  return (
+    <div className="divide-y px-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+      {/* Toss intelligence */}
+      <div className="py-4">
+        <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>TOSS INTELLIGENCE</div>
+        <div className="flex gap-3 mb-2">
+          <div className="flex-1 rounded-none p-3 text-center"
+            style={{ border: `1px solid ${batFirst >= bowlFirst ? "var(--accent-primary)" : "rgba(255,255,255,0.08)"}`, background: "#0F1117" }}>
+            <div className="font-mono text-[18px] font-black" style={{ color: "var(--accent-primary)" }}>{batFirst.toFixed(1)}%</div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: "#6B7280" }}>BAT FIRST</div>
+          </div>
+          <div className="flex-1 rounded-none p-3 text-center"
+            style={{ border: `1px solid ${bowlFirst > batFirst ? "var(--accent-primary)" : "rgba(255,255,255,0.08)"}`, background: "#0F1117" }}>
+            <div className="font-mono text-[18px] font-black" style={{ color: "var(--accent-primary)" }}>{bowlFirst.toFixed(1)}%</div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.1em] mt-1" style={{ color: "#6B7280" }}>BOWL FIRST</div>
+          </div>
+        </div>
+        <div className="font-mono text-[11px] font-bold" style={{ color: "var(--accent-primary)" }}>BEST CALL: {bestCall}</div>
+      </div>
+
+      {/* Home advantage */}
+      {intel.home_teams?.length > 0 && (
+        <div className="py-4">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>HOME ADVANTAGE // top teams</div>
+          {intel.home_teams.slice(0, 3).map((t) => (
+            <div key={t.team} className="flex items-center justify-between py-1.5">
+              <span className="font-mono text-[12px] font-bold" style={{ color: "var(--accent-primary)" }}>{t.team}</span>
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[11px] font-bold" style={{ color: "var(--accent-primary)" }}>{t.win_pct.toFixed(0)}%</span>
+                <span className="font-mono text-[10px]" style={{ color: "#6B7280" }}>{t.matches}M</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Venue kings */}
+      {intel.venue_kings?.length > 0 && (
+        <div className="py-4">
+          <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: "#6B7280" }}>VENUE KINGS // MOTM leaders</div>
+          {intel.venue_kings.slice(0, 5).map((k, i) => (
+            <div key={k.player} className="flex items-center justify-between py-1.5">
+              <span className="font-mono text-[12px]" style={{ color: "#F0F0F0" }}>{k.player}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-[13px] font-bold" style={{ color: "var(--accent-primary)" }}>{k.motm_count}</span>
+                <span>🏆</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VenueDetailPanel({ venueName, onClose }: { venueName: string; onClose: () => void }) {
   const [detail, setDetail] = useState<VenueDetail | null>(null);
   const [error, setError] = useState(false);
+  const [showDeepIntel, setShowDeepIntel] = useState(false);
 
   useEffect(() => {
     setDetail(null);
     setError(false);
+    setShowDeepIntel(false);
     getVenue(venueName)
       .then(setDetail)
       .catch(() => setError(true));
@@ -169,7 +261,27 @@ function VenueDetailPanel({ venueName, onClose }: { venueName: string; onClose: 
             />
           </div>
         )}
+
+        {/* Deep intel toggle */}
+        {detail && (
+          <div className="mt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "12px" }}>
+            <button
+              onClick={() => setShowDeepIntel((v) => !v)}
+              className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] transition-opacity hover:opacity-70"
+              style={{ color: showDeepIntel ? "#6B7280" : "var(--accent-primary)" }}
+            >
+              {showDeepIntel ? "HIDE INTEL ×" : "DEEP INTEL →"}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Deep intel section */}
+      {showDeepIntel && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          <DeepIntelPanel venueName={venueName} />
+        </div>
+      )}
     </div>
   );
 }
